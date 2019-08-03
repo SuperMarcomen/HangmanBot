@@ -12,16 +12,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class StartInlineMatch implements InlineQueryHandler {
 
     private final Bot bot;
+    private List<String> wordList;
     private Map<String, Hangman> matches;
     private InlineKeyboardMarkup cancelButton;
 
-    public StartInlineMatch(Bot bot, Map<String, Hangman> matches) {
+    public StartInlineMatch(Bot bot, Map<String, Hangman> matches, List<String> wordList) {
         this.bot = bot;
         this.matches = matches;
+        this.wordList = wordList;
         cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("Annulla", "cancel_message"));
     }
 
@@ -29,14 +32,15 @@ public class StartInlineMatch implements InlineQueryHandler {
     public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
 
-        Hangman hangman = new Hangman("hello");
+        Hangman hangman = new Hangman(getRandomWord(), 5);
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(chosenInlineResult.getInlineMessageId().get())
-                .replyMarkup( hangman.generateKeyboard())
-                .text("Parola da indovinare: -----");
+                .replyMarkup(hangman.generateKeyboard())
+                .text(Text.parseHtml("🔡 <b>Parola da indovinare:</b> " + hangman.getCurrentState() + "\n❌ <b>Errori:</b> " + hangman.getErrors() + "/" + hangman.getMaxErrors()));
 
         bot.execute(editMessageText);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
+        System.out.println(hangman.getWord());
     }
 
     @Override
@@ -60,15 +64,8 @@ public class StartInlineMatch implements InlineQueryHandler {
         );
     }
 
-    private InlineKeyboardMarkup getKeyboardLetters() {
-        char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-        List<InlineKeyboardButton> buttons = new ArrayList<>();
-        for (char c : alphabet) {
-            CallbackDataInlineKeyboardButton button = new CallbackDataInlineKeyboardButton(String.valueOf(c), "letter_" + c);
-            buttons.add(button);
-        }
-
-        return InlineKeyboardMarkup.fromColumns(6, buttons);
+    private String getRandomWord() {
+        return wordList.get(new Random().nextInt(wordList.size()));
     }
 
 }

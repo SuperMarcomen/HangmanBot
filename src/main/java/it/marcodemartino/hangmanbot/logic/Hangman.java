@@ -3,7 +3,6 @@ package it.marcodemartino.hangmanbot.logic;
 import io.github.ageofwar.telejam.inline.CallbackDataInlineKeyboardButton;
 import io.github.ageofwar.telejam.inline.InlineKeyboardButton;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
-import jdk.nashorn.internal.objects.annotations.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +16,9 @@ public class Hangman {
     private int errors;
     private int maxErrors;
 
-    public Hangman(String word) {
+    public Hangman(String word, int maxErrors) {
         this.word = word;
+        this.maxErrors = maxErrors;
         guessedLetters = new ArrayList<>();
         wrongLetters = new ArrayList<>();
         saidWords = new ArrayList<>();
@@ -27,20 +27,20 @@ public class Hangman {
     public String getCurrentState() {
         StringBuilder currentWord = new StringBuilder();
         for (char c : word.toCharArray()) {
-            if(guessedLetters.contains(c))
-                currentWord.append(c);
+            if(guessedLetters.contains(Character.toLowerCase(c)))
+                currentWord.append(c).append(" ");
             else
-                currentWord.append('-');
+                currentWord.append("- ");
         }
 
         return currentWord.toString();
     }
 
     public GuessResult guessLetter(char c) {
-        if(guessedLetters.contains(c) || wrongLetters.contains(c))
+        if(String.valueOf(c).equals("-") || guessedLetters.contains(c) || wrongLetters.contains(c))
             return GuessResult.LETTER_ALREADY_SAID;
 
-        if (word.indexOf(c) != -1) {
+        if (word.toLowerCase().indexOf(c) != -1) {
             guessedLetters.add(c);
             return GuessResult.LETTER_GUESSED;
         } else {
@@ -70,7 +70,7 @@ public class Hangman {
     }
 
     private boolean areLetterRight() {
-        for (char c : word.toCharArray())
+        for (char c : word.toLowerCase().toCharArray())
             if(!guessedLetters.contains(c))
                 return false;
 
@@ -80,18 +80,36 @@ public class Hangman {
     public InlineKeyboardMarkup generateKeyboard() {
         String alphabet = "abcdefghijklmnopqrstuvwxyz";
         for (Character character : guessedLetters)
-            alphabet = alphabet.replaceAll(String.valueOf(character), "-");
+            alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
 
         for (Character character : wrongLetters)
-            alphabet = alphabet.replaceAll(String.valueOf(character), "-");
+            alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
 
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (char c : alphabet.toCharArray()) {
-            CallbackDataInlineKeyboardButton button = new CallbackDataInlineKeyboardButton(String.valueOf(c), "letter_" + c);
+            CallbackDataInlineKeyboardButton button;
+
+            if(c != Character.toLowerCase(c)) //letter is guessed
+                button = new CallbackDataInlineKeyboardButton("-", "letter_" + Character.toLowerCase(c));
+            else
+                button = new CallbackDataInlineKeyboardButton(String.valueOf(c).toUpperCase(), "letter_" + Character.toLowerCase(c));
+
+
             buttons.add(button);
         }
 
         return InlineKeyboardMarkup.fromColumns(6, buttons);
     }
 
+    public String getWord() {
+        return word;
+    }
+
+    public int getErrors() {
+        return errors;
+    }
+
+    public int getMaxErrors() {
+        return maxErrors;
+    }
 }
