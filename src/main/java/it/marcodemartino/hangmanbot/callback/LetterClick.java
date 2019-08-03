@@ -23,26 +23,6 @@ public class LetterClick implements CallbackDataHandler {
         this.generalMessage = generalMessage;
     }
 
-    private String getResponseMessage(GuessResult guessResult) {
-        switch (guessResult) {
-            case LETTER_ALREADY_SAID:
-                return "Lettera già detta";
-            case LETTER_WRONG:
-                return "Lettera sbagliata";
-            case LETTER_GUESSED:
-                return "Hai indovinato una lettera";
-            case WORD_WRONG:
-                return "Parola sbagliata";
-            case WORD_GUESSED:
-                return "Parola indovinata";
-            case MATCH_LOSE:
-                return "Hai perso la partita";
-            case MATCH_WIN:
-                return "Hai vinto la partita";
-        }
-        return "C'è stato un errore";
-    }
-
     @Override
     public void onCallbackData(CallbackQuery callbackQuery, String s, String s1) throws Throwable {
         if(!s.startsWith("letter")) return;
@@ -65,7 +45,7 @@ public class LetterClick implements CallbackDataHandler {
         /* Letter already said */
         if(!guessResult.equals(GuessResult.LETTER_ALREADY_SAID) && !guessResult.equals(GuessResult.WORD_ALREADY_SAID)) {
             EditMessageText editMessageText = new EditMessageText()
-                    .text(Text.parseHtml(generalMessage))
+                    .text(Text.parseHtml(handlePlaceholder(generalMessage, hangman)))
                     .replyMarkup(hangman.generateKeyboard())
                     .inlineMessage(callbackQuery.getInlineMessageId().get());
             bot.execute(editMessageText);
@@ -91,8 +71,8 @@ public class LetterClick implements CallbackDataHandler {
 
         /* Editing the message */
         StringBuilder message = new StringBuilder(generalMessage);
-        if (status.equals(GuessResult.MATCH_WIN)) message.append("🎊 Hai vinto!");
-        else message.append("⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
+        if (status.equals(GuessResult.MATCH_WIN)) message.append("\n🎊 Hai vinto!");
+        else message.append("\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
 
         EditMessageText editMessageText = new EditMessageText()
                 .text(Text.parseHtml(handlePlaceholder(message.toString(), hangman)))
@@ -100,10 +80,31 @@ public class LetterClick implements CallbackDataHandler {
         bot.execute(editMessageText);
     }
 
+    private String getResponseMessage(GuessResult guessResult) {
+        switch (guessResult) {
+            case LETTER_ALREADY_SAID:
+                return "Lettera già detta";
+            case LETTER_WRONG:
+                return "Lettera sbagliata";
+            case LETTER_GUESSED:
+                return "Hai indovinato una lettera";
+            case WORD_WRONG:
+                return "Parola sbagliata";
+            case WORD_GUESSED:
+                return "Parola indovinata";
+            case MATCH_LOSE:
+                return "Hai perso la partita";
+            case MATCH_WIN:
+                return "Hai vinto la partita";
+        }
+        return "C'è stato un errore";
+    }
+
     private String handlePlaceholder(String string, Hangman hangman) {
         string = string.replace("word_state", hangman.getCurrentState());
         string = string.replace("current_errors", String.valueOf(hangman.getErrors()));
         string = string.replace("max_errors", String.valueOf(hangman.getMaxErrors()));
+        string = string.replace("category", hangman.getCategory());
         return string;
     }
 

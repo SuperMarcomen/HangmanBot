@@ -139,6 +139,7 @@ IdentityHashMap
 IllegalAccessError
 IllegalAccessException
 IllegalArgumentException
+IllegalCallerException
 IllegalFormatCodePointException
 IllegalFormatConversionException
 IllegalFormatException
@@ -149,6 +150,7 @@ IllegalMonitorStateException
 IllegalStateException
 IllegalThreadStateException
 IllformedLocaleException
+InaccessibleObjectException
 IncompatibleClassChangeError
 IndexOutOfBoundsException
 InheritableThreadLocal
@@ -178,6 +180,7 @@ InvocationHandler
 InvocationTargetException
 Iterable
 Iterator
+LayerInstantiationException
 LineNumberInputStream
 LineNumberReader
 LinkageError
@@ -209,6 +212,7 @@ MissingFormatArgumentException
 MissingFormatWidthException
 MissingResourceException
 Modifier
+Module
 NavigableMap
 NavigableSet
 NegativeArraySizeException
@@ -262,6 +266,7 @@ PrintWriter
 PriorityQueue
 Process
 ProcessBuilder
+ProcessHandle
 Properties
 PropertyPermission
 PropertyResourceBundle
@@ -299,8 +304,10 @@ Spliterator
 Spliterators
 SplittableRandom
 Stack
+StackFrameInfo
 StackOverflowError
 StackTraceElement
+StackWalker
 Stream
 StreamCorruptedException
 StreamSupport

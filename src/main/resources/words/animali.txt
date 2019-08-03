@@ -1,0 +1,11 @@
+Cane
+Gatto
+Mosca
+Elefante
+Leone
+Tigre
+Leopardo
+Pappagallo
+Gallo
+Gallina
+Pulcino

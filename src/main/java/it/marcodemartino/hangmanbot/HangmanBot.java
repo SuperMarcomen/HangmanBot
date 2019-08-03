@@ -20,17 +20,15 @@ import java.util.Map;
 
 public class HangmanBot extends LongPollingBot {
 
-    public HangmanBot(Bot bot) throws IOException {
+    public HangmanBot(Bot bot, Map<String, Hangman> matches) throws IOException {
         super(bot);
-
         events.registerCommand(
                 new Start(bot), "start"
         );
-        Map<String, Hangman> matches = new HashMap<>();
 
-        String generalMessage = "<b>Parola da indovinare:</b> word_state \n❌ <b>Errori:</b> current_errors/max_errors";
+        String generalMessage = "<b>Categoria:</b> category\n\n<b>Parola da indovinare:</b> word_state \n❌ <b>Errori:</b> current_errors/max_errors";
         events.registerUpdateHandler(
-                new StartInlineMatch(bot, matches, generalMessage, getWordsFromFile("words.txt"))
+                new StartInlineMatch(bot, matches, generalMessage, getWordsFiles())
         );
 
         events.registerUpdateHandler(
@@ -40,6 +38,7 @@ public class HangmanBot extends LongPollingBot {
         events.registerUpdateHandler(
                 new CancelMessage(bot)
         );
+
     }
 
     public static void main(String[] args) throws IOException {
@@ -49,13 +48,29 @@ public class HangmanBot extends LongPollingBot {
         }
         String token = args[0];
         Bot bot = Bot.fromToken(token);
-        HangmanBot hangmanBOT = new HangmanBot(bot);
+
+        Map<String, Hangman> matches = new HashMap<>();
+        HangmanBot hangmanBOT = new HangmanBot(bot, matches);
         hangmanBOT.run();
     }
 
+    private Map<String, List<String>> getWordsFiles() throws IOException {
+        Map<String, List<String>> wordCategory = new HashMap<>();
 
-    private List<String> getWordsFromFile(String fileName) throws IOException {
-        File file = getFileFromResources(fileName);
+        URL url = HangmanBot.class
+                .getClassLoader().getResource("words");
+        File folder = new File(url.getFile());
+
+        for (final File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) continue;
+            wordCategory.put(fileEntry.getName().replace(".txt", ""), getWordsFromFile(fileEntry));
+
+        }
+
+        return wordCategory;
+    }
+
+    private List<String> getWordsFromFile(File file) throws IOException {
         List<String> wordList = new ArrayList<>();
 
         try (FileReader reader = new FileReader(file);
@@ -68,18 +83,6 @@ public class HangmanBot extends LongPollingBot {
         }
 
         return wordList;
-    }
-
-    private File getFileFromResources(String fileName) {
-        ClassLoader classLoader = getClass().getClassLoader();
-
-        URL resource = classLoader.getResource(fileName);
-        if (resource == null) {
-            throw new IllegalArgumentException("file is not found!");
-        } else {
-            return new File(resource.getFile());
-        }
-
     }
 
 }

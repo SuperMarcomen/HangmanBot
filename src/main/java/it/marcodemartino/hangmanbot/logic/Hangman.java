@@ -10,14 +10,16 @@ import java.util.List;
 public class Hangman {
 
     private String word;
+    private String category;
     private List<Character> guessedLetters;
     private List<Character> wrongLetters;
     private List<String> saidWords;
     private int errors;
     private int maxErrors;
 
-    public Hangman(String word, int maxErrors) {
+    public Hangman(String word, String category, int maxErrors) {
         this.word = word;
+        this.category = category;
         this.maxErrors = maxErrors;
         guessedLetters = new ArrayList<>();
         wrongLetters = new ArrayList<>();
@@ -103,6 +105,10 @@ public class Hangman {
 
     public String getWord() {
         return word;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public int getErrors() {
