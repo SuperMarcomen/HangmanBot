@@ -13,25 +13,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class HangmanBot extends LongPollingBot {
-
-    public static void main(String[] args) throws IOException {
-if (args.length != 1) {
-            System.err.println("Pass the bot token as unique program argument");
-            System.exit(1);
-        }
-        String token = args[0];
-        Bot bot = Bot.fromToken(token);
-        HangmanBot hangmanBOT = new HangmanBot(bot);
-        hangmanBOT.run();
-    }
 
     public HangmanBot(Bot bot) throws IOException {
         super(bot);
@@ -40,17 +27,30 @@ if (args.length != 1) {
                 new Start(bot), "start"
         );
         Map<String, Hangman> matches = new HashMap<>();
+
+        String generalMessage = "<b>Parola da indovinare:</b> word_state \n❌ <b>Errori:</b> current_errors/max_errors";
         events.registerUpdateHandler(
-                new StartInlineMatch(bot, matches, getWordsFromFile("words.txt"))
+                new StartInlineMatch(bot, matches, generalMessage, getWordsFromFile("words.txt"))
         );
 
         events.registerUpdateHandler(
-                new LetterClick(bot, matches)
+                new LetterClick(bot, matches, generalMessage)
         );
 
         events.registerUpdateHandler(
                 new CancelMessage(bot)
         );
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.err.println("Pass the bot token as unique program argument");
+            System.exit(1);
+        }
+        String token = args[0];
+        Bot bot = Bot.fromToken(token);
+        HangmanBot hangmanBOT = new HangmanBot(bot);
+        hangmanBOT.run();
     }
 
 
