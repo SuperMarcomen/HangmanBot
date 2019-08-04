@@ -7,12 +7,15 @@ import it.marcodemartino.hangmanbot.callback.LetterClick;
 import it.marcodemartino.hangmanbot.commands.Start;
 import it.marcodemartino.hangmanbot.inline.StartInlineMatch;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.stats.DatabaseManager;
+import it.marcodemartino.hangmanbot.stats.StatsManager;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,19 +23,23 @@ import java.util.Map;
 
 public class HangmanBot extends LongPollingBot {
 
-    public HangmanBot(Bot bot, Map<String, Hangman> matches) throws IOException {
+    public HangmanBot(Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
         super(bot);
         events.registerCommand(
                 new Start(bot), "start"
         );
 
-        String generalMessage = "<b>Categoria:</b> category\n\n<b>Parola da indovinare:</b>\nword_state \n❌ <b>Errori:</b> current_errors/max_errors";
+        String generalMessage = "├ <b>Categoria:</b> category\n├ <b>Parola da indovinare:</b>\n├  word_state \n└ <b>Errori:</b> current_errors/max_errors";
+
+        DatabaseManager databaseManager = new DatabaseManager("localhost", "root", "", "test", "bot", 3306);
+        StatsManager statsManager = new StatsManager(databaseManager);
+
         events.registerUpdateHandler(
-                new StartInlineMatch(bot, matches, generalMessage, getWordsFiles())
+                new StartInlineMatch(bot, statsManager, matches, generalMessage, getWordsFiles())
         );
 
         events.registerUpdateHandler(
-                new LetterClick(bot, matches, generalMessage)
+                new LetterClick(bot, statsManager, matches, generalMessage)
         );
 
         events.registerUpdateHandler(
@@ -41,7 +48,7 @@ public class HangmanBot extends LongPollingBot {
 
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException {
         if (args.length != 1) {
             System.err.println("Pass the bot token as unique program argument");
             System.exit(1);

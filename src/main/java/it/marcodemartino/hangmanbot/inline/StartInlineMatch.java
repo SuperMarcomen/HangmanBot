@@ -6,9 +6,12 @@ import io.github.ageofwar.telejam.methods.AnswerInlineQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
+import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.stats.StatsManager;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -17,13 +20,15 @@ import java.util.Random;
 public class StartInlineMatch implements InlineQueryHandler {
 
     private final Bot bot;
+    private StatsManager statsManager;
     private final String generalMessage;
     private Map<String, List<String>> wordCategory;
     private Map<String, Hangman> matches;
     private InlineKeyboardMarkup cancelButton;
 
-    public StartInlineMatch(Bot bot, Map<String, Hangman> matches, String generalMessage, Map<String, List<String>> wordCategory) {
+    public StartInlineMatch(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, String generalMessage, Map<String, List<String>> wordCategory) {
         this.bot = bot;
+        this.statsManager = statsManager;
         this.matches = matches;
         this.generalMessage = generalMessage;
         this.wordCategory = wordCategory;
@@ -31,7 +36,7 @@ public class StartInlineMatch implements InlineQueryHandler {
     }
 
     @Override
-    public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException {
+    public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException, SQLException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
         String category = chosenInlineResult.getResultId().substring(6);
         Hangman hangman = new Hangman(getRandomWord(category), category, 5);
@@ -44,6 +49,7 @@ public class StartInlineMatch implements InlineQueryHandler {
 
         bot.execute(editMessageText);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
+        statsManager.increaseStats(chosenInlineResult.getSender().getId(), GuessResult.MATCH_STARTED);
         System.out.println(category + ":" + hangman.getWord());
     }
 

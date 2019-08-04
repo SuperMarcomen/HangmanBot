@@ -8,17 +8,20 @@ import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.stats.StatsManager;
 
 import java.util.Map;
 
 public class LetterClick implements CallbackDataHandler {
 
     private final Bot bot;
+    private StatsManager statsManager;
     private Map<String, Hangman> matches;
     private final String generalMessage;
 
-    public LetterClick(Bot bot, Map<String, Hangman> matches, String generalMessage) {
+    public LetterClick(Bot bot, StatsManager statsManagers, Map<String, Hangman> matches, String generalMessage) {
         this.bot = bot;
+        this.statsManager = statsManagers;
         this.matches = matches;
         this.generalMessage = generalMessage;
     }
@@ -42,7 +45,7 @@ public class LetterClick implements CallbackDataHandler {
         char c = s.replace("letter_", "").charAt(0);
         GuessResult guessResult = hangman.guessLetter(c);
 
-        /* Letter already said */
+        /* New letter was not already said */
         if (!guessResult.equals(GuessResult.LETTER_ALREADY_SAID)) {
             EditMessageText editMessageText = new EditMessageText()
                     .text(Text.parseHtml(handlePlaceholder(generalMessage, hangman)))
@@ -55,6 +58,9 @@ public class LetterClick implements CallbackDataHandler {
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                 .callbackQuery(callbackQuery)
                 .text(getResponseMessage(guessResult));
+
+        /* Increasing stats */
+        statsManager.increaseStats(callbackQuery.getSender().getId(), guessResult);
 
         GuessResult status = hangman.getStatus();
         /* Match is not ended */

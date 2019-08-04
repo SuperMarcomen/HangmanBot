@@ -5,8 +5,6 @@ Akhal teke
 Albatro urlatore
 Alce
 Alcelafo
-Alimentazione del cavallo
-Alimentazione delle tartarughe di terra
 Alligatore del missisipi
 Allodola
 Allosauro
@@ -107,7 +105,6 @@ Capra delle nevi
 Capriolo
 Caracal
 Caradriformi
-Caratteristiche degli invertebrati
 Cardellino
 Caribu
 Castoro
@@ -162,7 +159,6 @@ Coniglio selvatico
 Cormorano
 Cornacchia grigia
 Cornacchia nera
-Corretta alimentazione del cavallo
 Corvo comune
 Corvo imperiale
 Coyote
@@ -174,7 +170,6 @@ Crociere scozzese
 Crocodylia
 Cudu
 Culbianco
-Cura del manto del cavallo
 Cutrettola
 Daino
 Damalisco di hunter
@@ -255,11 +250,6 @@ Gru coronata grigia
 Gufo reale
 Guppy
 Hippocampus denise
-I 10 serpenti più velenosi al mondo
-I 5 pesci più veloci al mondo
-I mammiferi più grandi
-I mammiferi più piccoli
-I pesci più strani al mondo
 Ibis crestato
 Ibis sacro
 Iena
@@ -267,11 +257,6 @@ Iena maculata
 Iena striata
 Iguana
 Iguana marina
-Il cavallo come mezzo di trasporto
-Il comportamento del cavallo
-Il riccio
-Il Tilacino: un anomalo predatore
-Il volo degli insetti
 Impala
 Inseparabile
 Insetto foglia
@@ -281,17 +266,8 @@ Istrice
 Kiwi
 Koala
 Kob
-L’animale mammifero più piccolo del mondo
-L’animale più forte del mondo
-L’animale più grande del mondo
-L’animale terrestre più veloce del mondo
-La doma del cavallo
-La puntura delle meduse
 Lagenorinco dai denti obliqui
 Lagomorfi
-Le meduse del mediterraneo
-Le razze del cavallo
-Le tartarughe terrestri
 Lemming
 Lemure
 Leone
@@ -310,7 +286,8 @@ Lori lento
 Lucciola
 Lucertole
 Lucherino
-Lui grosso e lui piccolo
+Lui grosso
+Lui piccolo
 Lui verde
 Lupo
 Lupo artico
@@ -389,8 +366,6 @@ Passero solitario
 Pavone
 Pellicano
 Peppola
-Perché il ghepardo riesce a correre così veloce?
-Perché le giraffe hanno la lingua nera?
 Perissodattili
 Persico
 Pesce accetta

@@ -3,17 +3,22 @@ package it.marcodemartino.hangmanbot.logic;
 import io.github.ageofwar.telejam.inline.CallbackDataInlineKeyboardButton;
 import io.github.ageofwar.telejam.inline.InlineKeyboardButton;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
+import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Hangman {
 
+    @Getter
     private String word;
+    @Getter
     private String category;
     private List<Character> guessedLetters;
     private List<Character> wrongLetters;
+    @Getter
     private int errors;
+    @Getter
     private int maxErrors;
 
     public Hangman(String word, String category, int maxErrors) {
@@ -90,19 +95,4 @@ public class Hangman {
         return InlineKeyboardMarkup.fromColumns(6, buttons);
     }
 
-    public String getWord() {
-        return word;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public int getErrors() {
-        return errors;
-    }
-
-    public int getMaxErrors() {
-        return maxErrors;
-    }
 }
