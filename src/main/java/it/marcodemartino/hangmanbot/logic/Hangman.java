@@ -13,7 +13,6 @@ public class Hangman {
     private String category;
     private List<Character> guessedLetters;
     private List<Character> wrongLetters;
-    private List<String> saidWords;
     private int errors;
     private int maxErrors;
 
@@ -23,7 +22,6 @@ public class Hangman {
         this.maxErrors = maxErrors;
         guessedLetters = new ArrayList<>();
         wrongLetters = new ArrayList<>();
-        saidWords = new ArrayList<>();
     }
 
     public String getCurrentState() {
@@ -31,6 +29,8 @@ public class Hangman {
         for (char c : word.toCharArray()) {
             if(guessedLetters.contains(Character.toLowerCase(c)))
                 currentWord.append(c).append(" ");
+            else if (c == ' ')
+                currentWord.append("  ");
             else
                 currentWord.append("- ");
         }
@@ -39,7 +39,7 @@ public class Hangman {
     }
 
     public GuessResult guessLetter(char c) {
-        if(String.valueOf(c).equals("-") || guessedLetters.contains(c) || wrongLetters.contains(c))
+        if (guessedLetters.contains(c) || wrongLetters.contains(c))
             return GuessResult.LETTER_ALREADY_SAID;
 
         if (word.toLowerCase().indexOf(c) != -1) {
@@ -52,28 +52,15 @@ public class Hangman {
         }
     }
 
-    public GuessResult guessWord(String word) {
-        if(saidWords.contains(word))
-            return GuessResult.WORD_ALREADY_SAID;
-
-        if(this.word.equalsIgnoreCase(word)) {
-            return GuessResult.WORD_GUESSED;
-        } else {
-            saidWords.add(word.toLowerCase());
-            errors++;
-            return GuessResult.WORD_WRONG;
-        }
-    }
-
     public GuessResult getStatus() {
-        if(areLetterRight() || saidWords.contains(word)) return GuessResult.MATCH_WIN;
+        if (areLetterRight()) return GuessResult.MATCH_WIN;
         if(errors >= maxErrors) return GuessResult.MATCH_LOSE;
         return null;
     }
 
     private boolean areLetterRight() {
         for (char c : word.toLowerCase().toCharArray())
-            if(!guessedLetters.contains(c))
+            if (c != ' ' && !guessedLetters.contains(c))
                 return false;
 
         return true;

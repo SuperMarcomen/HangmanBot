@@ -43,7 +43,7 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult guessResult = hangman.guessLetter(c);
 
         /* Letter already said */
-        if(!guessResult.equals(GuessResult.LETTER_ALREADY_SAID) && !guessResult.equals(GuessResult.WORD_ALREADY_SAID)) {
+        if (!guessResult.equals(GuessResult.LETTER_ALREADY_SAID)) {
             EditMessageText editMessageText = new EditMessageText()
                     .text(Text.parseHtml(handlePlaceholder(generalMessage, hangman)))
                     .replyMarkup(hangman.generateKeyboard())
@@ -88,10 +88,6 @@ public class LetterClick implements CallbackDataHandler {
                 return "Lettera sbagliata";
             case LETTER_GUESSED:
                 return "Hai indovinato una lettera";
-            case WORD_WRONG:
-                return "Parola sbagliata";
-            case WORD_GUESSED:
-                return "Parola indovinata";
             case MATCH_LOSE:
                 return "Hai perso la partita";
             case MATCH_WIN:

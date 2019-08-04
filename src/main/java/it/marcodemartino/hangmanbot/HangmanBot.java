@@ -26,7 +26,7 @@ public class HangmanBot extends LongPollingBot {
                 new Start(bot), "start"
         );
 
-        String generalMessage = "<b>Categoria:</b> category\n\n<b>Parola da indovinare:</b> word_state \n❌ <b>Errori:</b> current_errors/max_errors";
+        String generalMessage = "<b>Categoria:</b> category\n\n<b>Parola da indovinare:</b>\nword_state \n❌ <b>Errori:</b> current_errors/max_errors";
         events.registerUpdateHandler(
                 new StartInlineMatch(bot, matches, generalMessage, getWordsFiles())
         );
