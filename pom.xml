@@ -34,9 +34,21 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.github.kskelm</groupId>
+            <artifactId>baringo</artifactId>
+            <version>v1.0.0</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>2.4.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.knowm.xchart</groupId>
+            <artifactId>xchart</artifactId>
+            <version>3.5.4</version>
         </dependency>
 
         <dependency>

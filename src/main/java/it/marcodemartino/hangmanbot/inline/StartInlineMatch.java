@@ -1,9 +1,12 @@
 package it.marcodemartino.hangmanbot.inline;
 
 import io.github.ageofwar.telejam.Bot;
+import io.github.ageofwar.telejam.connection.UploadFile;
 import io.github.ageofwar.telejam.inline.*;
+import io.github.ageofwar.telejam.media.PhotoSize;
 import io.github.ageofwar.telejam.methods.AnswerInlineQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
+import io.github.ageofwar.telejam.methods.SendPhoto;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
@@ -38,6 +41,11 @@ public class StartInlineMatch implements InlineQueryHandler {
     @Override
     public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException, SQLException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
+        /*if(chosenInlineResult.getQuery().equalsIgnoreCase("stats")) {
+            statsManager.generateChart();
+            InlineQueryResultPhoto sendPhoto = new InlineQueryResultPhoto("stats", "chart.png", "");
+            //bot.execute(sendPhoto);
+        }*/
         String category = chosenInlineResult.getResultId().substring(6);
         Hangman hangman = new Hangman(getRandomWord(category), category, 5);
         String message = handlePlaceholder(generalMessage, hangman);
@@ -55,6 +63,27 @@ public class StartInlineMatch implements InlineQueryHandler {
 
     @Override
     public void onInlineQuery(InlineQuery inlineQuery) throws IOException {
+        System.out.println(inlineQuery.getQuery());
+        if (inlineQuery.getQuery().equalsIgnoreCase("stats")) {
+            statsManager.generateChart();
+
+            SendPhoto sendPhoto = new SendPhoto()
+                    .chat(229856560L)
+                    .photo(UploadFile.fromFile("chart.png"));
+
+            PhotoSize[] photo = bot.execute(sendPhoto).getPhoto();
+            String fileId = photo[0].getId();
+
+            AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
+                    .inlineQuery(inlineQuery)
+                    .cacheTime(1)
+                    .results(
+                            getStatsResult(fileId)
+                    );
+            bot.execute(answerInlineQuery);
+            return;
+        }
+
         AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                 .inlineQuery(inlineQuery)
                 .cacheTime(0)
@@ -77,6 +106,13 @@ public class StartInlineMatch implements InlineQueryHandler {
         inlineQueryResults.add(newInlineQueryResult("match_random", "Categoria casuale"));
         wordCategory.forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category)));
         return inlineQueryResults;
+    }
+
+    private InlineQueryResultCachedPhoto getStatsResult(String id) {
+        return new InlineQueryResultCachedPhoto(
+                "stats",
+                id
+        );
     }
 
     private InlineQueryResult newInlineQueryResult(String id, String title) {

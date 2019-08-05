@@ -28,7 +28,6 @@ public class DatabaseManager {
     }
 
     public void updateUserStatistics(long userId, UserStats userStats) throws SQLException {
-        System.out.println("Hi");
         PreparedStatement statement = getConnection().prepareStatement("INSERT INTO " + tableName + " (`user_id`, `started_matches`, `guessed_letters`, `wrong_letters`) VALUES (?, ?, ?, ?) " +
                 "ON DUPLICATE KEY UPDATE `started_matches` = ?, `guessed_letters` = ?, `wrong_letters` = ?");
         statement.setLong(1, userId);

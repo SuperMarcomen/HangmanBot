@@ -77,8 +77,8 @@ public class LetterClick implements CallbackDataHandler {
 
         /* Editing the message */
         StringBuilder message = new StringBuilder(generalMessage);
-        if (status.equals(GuessResult.MATCH_WIN)) message.append("\n🎊 Hai vinto!");
-        else message.append("\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
+        if (status.equals(GuessResult.MATCH_WIN)) message.append("\n\n🎊 Hai vinto!");
+        else message.append("\n\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
 
         EditMessageText editMessageText = new EditMessageText()
                 .text(Text.parseHtml(handlePlaceholder(message.toString(), hangman)))
