@@ -1,11 +1,16 @@
 package it.marcodemartino.hangmanbot.stats;
 
+import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.stats.chart.StatsBarChart;
 import javafx.application.Application;
+import javafx.application.Platform;
 
 import java.sql.SQLException;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StatsManager {
 
@@ -17,27 +22,31 @@ public class StatsManager {
         userStatistics = databaseManager.getAllUserStatistics();
     }
 
-    public static Map<String, Integer> getGuessedLettersStats() {
-        long first = 0, second = 0, third = 0;
-
-        for (UserStats value : userStatistics.values()) {
-            if (value.getGuessedLetters() > first) {
-                first = value.getGuessedLetters();
-            } else if (value.getGuessedLetters() > second) {
-                second = value.getGuessedLetters();
-            } else if (value.getGuessedLetters() > third) {
-                third = value.getGuessedLetters();
-            }
-        }
-        return null;
+    static {
+        new Thread(() -> Application.launch(StatsBarChart.class)).start();
     }
 
-    public UserStats increaseStats(long userId, GuessResult guessResult) throws SQLException {
-        UserStats userStats = userStatistics.get(userId);
+    public static void reloadUsers() throws SQLException {
+        userStatistics = databaseManager.getAllUserStatistics();
+    }
+
+    public static List<UserStats> getBestUsers() {
+        return userStatistics.values().stream()
+                .sorted(Comparator.comparingLong(UserStats::getSummedStats)
+                        .reversed())
+                .limit(5)
+                .collect(Collectors.toList());
+    }
+
+    public UserStats increaseStats(User user, GuessResult guessResult) throws SQLException {
+        UserStats userStats = userStatistics.get(user.getId());
         if (userStats == null) {
             userStats = new UserStats();
-            userStatistics.put(userId, userStats);
+            userStatistics.put(user.getId(), userStats);
         }
+
+        if (user.getUsername().isPresent()) userStats.setUsername(user.getUsername().get());
+        else userStats.setUsername(user.getFirstName());
 
         switch (guessResult) {
             case MATCH_STARTED:
@@ -51,11 +60,11 @@ public class StatsManager {
                 break;
         }
 
-        databaseManager.updateUserStatistics(userId, userStats);
+        databaseManager.updateUserStatistics(user.getId(), userStats);
         return userStats;
     }
 
     public void generateChart() {
-        new Thread(() -> Application.launch(StatsBarChart.class)).start();
+        Platform.runLater(StatsBarChart::saveChart);
     }
 }

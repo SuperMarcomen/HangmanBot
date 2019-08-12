@@ -19,7 +19,7 @@ class CustomStackedBarChart extends StackedBarChart<String, Number> {
         for (Series<String, Number> series : getData()) {
             for (Data<String, Number> data : series.getData()) {
                 StackPane bar = (StackPane) data.getNode();
-
+                if (data.getYValue().intValue() == 0) continue;
                 final Text dataText = new Text(data.getYValue() + "");
                 bar.getChildren().add(dataText);
 

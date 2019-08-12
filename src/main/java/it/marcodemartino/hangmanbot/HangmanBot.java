@@ -5,6 +5,7 @@ import io.github.ageofwar.telejam.LongPollingBot;
 import it.marcodemartino.hangmanbot.callback.CancelMessage;
 import it.marcodemartino.hangmanbot.callback.LetterClick;
 import it.marcodemartino.hangmanbot.commands.Start;
+import it.marcodemartino.hangmanbot.inline.AdminUtilities;
 import it.marcodemartino.hangmanbot.inline.StartInlineMatch;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.DatabaseManager;
@@ -14,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,10 +29,14 @@ public class HangmanBot extends LongPollingBot {
                 new Start(bot), "start"
         );
 
-        String generalMessage = "├ <b>Categoria:</b> category\n├ <b>Parola da indovinare:</b>\n├  word_state \n└ <b>Errori:</b> current_errors/max_errors";
+        String generalMessage = "<b>Categoria:</b> category\n<b>Parola da indovinare:</b>\nword_state\n<b>Errori:</b> current_errors/max_errors";
 
-        DatabaseManager databaseManager = new DatabaseManager("localhost", "root", "", "test", "bot", 3306);
+        DatabaseManager databaseManager = new DatabaseManager("localhost", "user", "bella", "test", "bot", 3306);
         StatsManager statsManager = new StatsManager(databaseManager);
+
+        events.registerUpdateHandler(
+                new AdminUtilities(bot)
+        );
 
         events.registerUpdateHandler(
                 new StartInlineMatch(bot, statsManager, matches, generalMessage, getWordsFiles())
@@ -64,9 +68,7 @@ public class HangmanBot extends LongPollingBot {
     private Map<String, List<String>> getWordsFiles() throws IOException {
         Map<String, List<String>> wordCategory = new HashMap<>();
 
-        URL url = HangmanBot.class
-                .getClassLoader().getResource("words");
-        File folder = new File(url.getFile());
+        File folder = new File("words");
 
         for (final File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) continue;

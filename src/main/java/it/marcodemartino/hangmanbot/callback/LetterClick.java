@@ -5,7 +5,9 @@ import io.github.ageofwar.telejam.callbacks.CallbackDataHandler;
 import io.github.ageofwar.telejam.callbacks.CallbackQuery;
 import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
+import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.text.Text;
+import it.marcodemartino.hangmanbot.inline.StartInlineMatch;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
@@ -60,7 +62,7 @@ public class LetterClick implements CallbackDataHandler {
                 .text(getResponseMessage(guessResult));
 
         /* Increasing stats */
-        statsManager.increaseStats(callbackQuery.getSender().getId(), guessResult);
+        statsManager.increaseStats(callbackQuery.getSender(), guessResult);
 
         GuessResult status = hangman.getStatus();
         /* Match is not ended */
@@ -84,6 +86,13 @@ public class LetterClick implements CallbackDataHandler {
                 .text(Text.parseHtml(handlePlaceholder(message.toString(), hangman)))
                 .inlineMessage(callbackQuery.getInlineMessageId().get());
         bot.execute(editMessageText);
+
+        if (matches.isEmpty() && !StartInlineMatch.isStartMatch()) {
+            SendMessage sendMessage = new SendMessage()
+                    .chat(229856560L)
+                    .text("Bot spento con successo!");
+            bot.execute(sendMessage);
+        }
     }
 
     private String getResponseMessage(GuessResult guessResult) {

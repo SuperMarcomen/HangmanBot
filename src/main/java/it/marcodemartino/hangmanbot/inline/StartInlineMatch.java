@@ -12,6 +12,8 @@ import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class StartInlineMatch implements InlineQueryHandler {
 
@@ -28,6 +31,9 @@ public class StartInlineMatch implements InlineQueryHandler {
     private Map<String, List<String>> wordCategory;
     private Map<String, Hangman> matches;
     private InlineKeyboardMarkup cancelButton;
+    @Setter
+    @Getter
+    private static boolean startMatch = true;
 
     public StartInlineMatch(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, String generalMessage, Map<String, List<String>> wordCategory) {
         this.bot = bot;
@@ -41,11 +47,18 @@ public class StartInlineMatch implements InlineQueryHandler {
     @Override
     public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException, SQLException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
-        /*if(chosenInlineResult.getQuery().equalsIgnoreCase("stats")) {
-            statsManager.generateChart();
-            InlineQueryResultPhoto sendPhoto = new InlineQueryResultPhoto("stats", "chart.png", "");
-            //bot.execute(sendPhoto);
-        }*/
+        if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop") || chosenInlineResult.getQuery().equalsIgnoreCase("reload")))
+            return;
+
+        if (!StartInlineMatch.startMatch) {
+            EditMessageText editMessageText = new EditMessageText()
+                    .inlineMessage(chosenInlineResult.getInlineMessageId().get())
+                    .text(Text.parseHtml("Sto aspettando che le partite in corso per Telegram finiscano.\nL'autore del bot @SuperMarcomen ha richiesto di stoppare il bot per eseguire della manutenzione\nOra non è più possibile cominciare nuove partite."));
+
+            bot.execute(editMessageText);
+            return;
+        }
+
         String category = chosenInlineResult.getResultId().substring(6);
         Hangman hangman = new Hangman(getRandomWord(category), category, 5);
         String message = handlePlaceholder(generalMessage, hangman);
@@ -57,15 +70,15 @@ public class StartInlineMatch implements InlineQueryHandler {
 
         bot.execute(editMessageText);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
-        statsManager.increaseStats(chosenInlineResult.getSender().getId(), GuessResult.MATCH_STARTED);
-        System.out.println(category + ":" + hangman.getWord());
+        statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
+        System.out.format("Categoria: %s Parola %s UserID: %s Username: %s Name; %s\n", category, hangman.getWord(), chosenInlineResult.getSender().getId(), chosenInlineResult.getSender().getUsername().orElse("none"), chosenInlineResult.getSender().getName());
     }
 
     @Override
-    public void onInlineQuery(InlineQuery inlineQuery) throws IOException {
-        System.out.println(inlineQuery.getQuery());
+    public void onInlineQuery(InlineQuery inlineQuery) throws IOException, InterruptedException {
         if (inlineQuery.getQuery().equalsIgnoreCase("stats")) {
             statsManager.generateChart();
+            TimeUnit.SECONDS.sleep(1);
 
             SendPhoto sendPhoto = new SendPhoto()
                     .chat(229856560L)

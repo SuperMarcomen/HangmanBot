@@ -14,7 +14,7 @@ public class Start implements CommandHandler {
 
     public void onCommand(Command command, TextMessage textMessage) throws IOException {
         SendMessage sendMessage = new SendMessage()
-                .text("Ciao, usami inline scrivendo in chat @SuperMarcomenBOT e cliccando sul bottone che comparirà sopra!")
+                .text("Ciao, usami inline scrivendo in chat @" + bot.getUsername() + " e cliccando sul bottone che comparirà sopra!")
                 .chat(textMessage.getChat());
         bot.execute(sendMessage);
     }
