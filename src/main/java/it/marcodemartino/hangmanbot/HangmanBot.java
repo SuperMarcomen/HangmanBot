@@ -8,6 +8,7 @@ import it.marcodemartino.hangmanbot.commands.Start;
 import it.marcodemartino.hangmanbot.inline.AdminUtilities;
 import it.marcodemartino.hangmanbot.inline.InlineResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.logic.Words;
 import it.marcodemartino.hangmanbot.stats.DatabaseManager;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 
@@ -72,18 +73,27 @@ public class HangmanBot extends LongPollingBot {
 
     }
 
-    private Map<String, List<String>> getWordsFiles() throws IOException {
-        Map<String, List<String>> wordCategory = new HashMap<>();
+    private Map<Locale, Words> getWordsFiles() throws IOException {
+        Map<Locale, Words> words = new HashMap<>();
 
         File folder = new File("words");
 
         for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) continue;
-            wordCategory.put(fileEntry.getName().replace(".txt", ""), getWordsFromFile(fileEntry));
+            if (fileEntry.isDirectory()) {
+                Locale locale = Locale.forLanguageTag(fileEntry.getName());
+                Map<String, List<String>> wordCategory = new HashMap<>();
+
+                for (final File file : fileEntry.listFiles()) {
+                    wordCategory.put(file.getName().replace(".txt", ""), getWordsFromFile(file));
+                }
+
+                words.put(locale, new Words(wordCategory));
+
+            }
 
         }
 
-        return wordCategory;
+        return words;
     }
 
     private List<String> getWordsFromFile(File file) throws IOException {

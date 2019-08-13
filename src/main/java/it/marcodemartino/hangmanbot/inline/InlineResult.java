@@ -8,6 +8,7 @@ import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.logic.Words;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 import it.marcodemartino.hangmanbot.stats.UserStats;
 import lombok.Getter;
@@ -23,17 +24,17 @@ public class InlineResult implements InlineQueryHandler {
     private final Bot bot;
     private StatsManager statsManager;
     private Map<String, Hangman> matches;
-    private Map<String, List<String>> wordCategory;
+    private Map<Locale, Words> words;
     private InlineKeyboardMarkup cancelButton;
     @Setter
     @Getter
     private static boolean startMatch = true;
 
-    public InlineResult(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, Map<String, List<String>> wordCategory) {
+    public InlineResult(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, Map<Locale, Words> words) {
         this.bot = bot;
         this.statsManager = statsManager;
         this.matches = matches;
-        this.wordCategory = wordCategory;
+        this.words = words;
         cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("Annulla", "cancel_message"));
     }
 
@@ -65,7 +66,7 @@ public class InlineResult implements InlineQueryHandler {
         bot.execute(editMessageText);
 
         String category = chosenInlineResult.getResultId().substring(6);
-        Hangman hangman = new Hangman(getRandomWord(category), chosenInlineResult.getSender().getId(), category, 5);
+        Hangman hangman = new Hangman(words.get(chosenInlineResult.getSender().getLocale()).getRandomWord(category), chosenInlineResult.getSender().getId(), category, 5);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
         statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
 
@@ -84,6 +85,7 @@ public class InlineResult implements InlineQueryHandler {
 
     @Override
     public void onInlineQuery(InlineQuery inlineQuery) throws Exception {
+        System.out.println(inlineQuery.getSender().getLocale());
         if (inlineQuery.getQuery().equalsIgnoreCase("stats")) {
             StringBuilder message = new StringBuilder("<b>Statistiche:</b>\n\n");
 
@@ -103,21 +105,25 @@ public class InlineResult implements InlineQueryHandler {
             bot.execute(answerInlineQuery);
 
         } else {
+            Locale locale = inlineQuery.getSender().getLocale();
+            System.out.println(locale);
+            if (!words.containsKey(locale)) locale = Locale.ENGLISH;
+
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
                     .cacheTime(0)
                     .results(
-                            getInlineQueryResults().toArray(new InlineQueryResult[0])
+                            getInlineQueryResults(locale).toArray(new InlineQueryResult[0])
                     );
             bot.execute(answerInlineQuery);
         }
 
     }
 
-    private List<InlineQueryResult> getInlineQueryResults() {
+    private List<InlineQueryResult> getInlineQueryResults(Locale locale) {
         List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
         inlineQueryResults.add(newInlineQueryResult("match_random", "Categoria casuale", "Clicca per cominciare una nuova partita", "Caricamento", cancelButton));
-        wordCategory.forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category, "Clicca per cominciare una nuova partita", "Caricamento", cancelButton)));
+        words.get(locale).getWordCategory().forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category, "Clicca per cominciare una nuova partita", "Caricamento", cancelButton)));
         return inlineQueryResults;
     }
 
@@ -129,20 +135,6 @@ public class InlineResult implements InlineQueryHandler {
                 cancelButton,
                 description
         );
-    }
-
-    private String getRandomWord(String category) {
-        List<String> words = wordCategory.get(category);
-        if (category.equals("random")) words = getRandomCategory();
-
-        return words.get(new Random().nextInt(words.size()));
-    }
-
-    private List<String> getRandomCategory() {
-        List<String> keysAsArray = new ArrayList<>(wordCategory.keySet());
-        keysAsArray.remove("Java");
-        String randomKey = keysAsArray.get(new Random().nextInt(keysAsArray.size()));
-        return wordCategory.get(randomKey);
     }
 
 }
