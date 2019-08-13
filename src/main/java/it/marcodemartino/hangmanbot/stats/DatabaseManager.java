@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatabaseManager {
+public class DatabaseManager extends Thread {
 
     private final String hostname;
     private final String username;
@@ -23,7 +23,7 @@ public class DatabaseManager {
         this.tableName = tableName;
         this.port = port;
 
-        System.out.printf("Hostname: %s Usename: %s Password: %s Database: %s TableName: %s Port: %s\n", hostname, username, password, database, tableName, port);
+        System.out.printf("Hostname: %s Username: %s Password: %s Database: %s TableName: %s Port: %s\n", hostname, username, password, database, tableName, port);
     }
 
     public void updateUserStatistics(long userId, UserStats userStats) throws SQLException {

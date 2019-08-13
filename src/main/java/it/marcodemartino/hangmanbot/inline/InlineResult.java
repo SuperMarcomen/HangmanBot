@@ -18,23 +18,21 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class StartInlineMatch implements InlineQueryHandler {
+public class InlineResult implements InlineQueryHandler {
 
     private final Bot bot;
     private StatsManager statsManager;
-    private final String generalMessage;
-    private Map<String, List<String>> wordCategory;
     private Map<String, Hangman> matches;
+    private Map<String, List<String>> wordCategory;
     private InlineKeyboardMarkup cancelButton;
     @Setter
     @Getter
     private static boolean startMatch = true;
 
-    public StartInlineMatch(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, String generalMessage, Map<String, List<String>> wordCategory) {
+    public InlineResult(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, Map<String, List<String>> wordCategory) {
         this.bot = bot;
         this.statsManager = statsManager;
         this.matches = matches;
-        this.generalMessage = generalMessage;
         this.wordCategory = wordCategory;
         cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("Annulla", "cancel_message"));
     }
@@ -45,7 +43,7 @@ public class StartInlineMatch implements InlineQueryHandler {
         if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop") || chosenInlineResult.getQuery().equalsIgnoreCase("reload")))
             return;
 
-        if (!StartInlineMatch.startMatch) {
+        if (!InlineResult.startMatch) {
             EditMessageText editMessageText = new EditMessageText()
                     .inlineMessage(chosenInlineResult.getInlineMessageId().get())
                     .text(Text.parseHtml("Sto aspettando che le partite in corso per Telegram finiscano.\nL'autore del bot @SuperMarcomen ha richiesto di stoppare il bot per eseguire della manutenzione\nOra non è più possibile cominciare nuove partite."));
@@ -54,23 +52,34 @@ public class StartInlineMatch implements InlineQueryHandler {
             return;
         }
 
-        String category = chosenInlineResult.getResultId().substring(6);
-        Hangman hangman = new Hangman(getRandomWord(category), category, 5);
-        String message = handlePlaceholder(generalMessage, hangman);
+        InlineKeyboardButton[] buttons = {
+                new CallbackDataInlineKeyboardButton("Singleplayer", "player_1"),
+                new CallbackDataInlineKeyboardButton("Multiplayer", "player_2")
+        };
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(chosenInlineResult.getInlineMessageId().get())
-                .replyMarkup(hangman.generateKeyboard())
-                .text(Text.parseHtml(message));
+                .replyMarkup(new InlineKeyboardMarkup(buttons))
+                .text("Come vuoi giocare?");
 
         bot.execute(editMessageText);
+
+        String category = chosenInlineResult.getResultId().substring(6);
+        Hangman hangman = new Hangman(getRandomWord(category), chosenInlineResult.getSender().getId(), category, 5);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
         statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Date date = new Date();
 
-        System.out.format("\nOrario: %s\nCategoria: %s\nParola: %s\nUserID: %s\nUsername: %s\nNome: %s\n", formatter.format(date), category, hangman.getWord(), chosenInlineResult.getSender().getId(), chosenInlineResult.getSender().getUsername().orElse("none"), chosenInlineResult.getSender().getName());
+        System.out.format("\nOrario: %s\nCategoria: %s\nParola: %s\nUserID: %s\nUsername: %s\nNome: %s\n",
+                formatter.format(date),
+                category,
+                hangman.getWord(),
+                chosenInlineResult.getSender().getId(),
+                chosenInlineResult.getSender().getUsername().orElse("none"),
+                chosenInlineResult.getSender().getName()
+        );
     }
 
     @Override
@@ -82,11 +91,14 @@ public class StartInlineMatch implements InlineQueryHandler {
                 message.append(String.format("<b>%s:</b>\n<i>Lettere indovinate:</i> %d\n<i>Lettere sbagliate:</i> %d\n\n", user.getUsername(), user.getGuessedLetters(), user.getWrongLetters()));
             }
 
+            UserStats userStats = statsManager.getUserStats(inlineQuery.getSender().getId());
+            message.append(String.format("\n<b>Le tue statistiche:</b>\n<i>Lettere indovinate:</i> %d\n<i>Lettere sbagliate:</i> %d", userStats.getGuessedLetters(), userStats.getWrongLetters()));
+
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
                     .cacheTime(0)
                     .results(
-                            newInlineQueryResult("stats", "Mosta le statistiche", message.toString())
+                            newInlineQueryResult("stats", "Mostra le statistiche", "Clicca per mostrare le statistiche", message.toString(), null)
                     );
             bot.execute(answerInlineQuery);
 
@@ -102,28 +114,20 @@ public class StartInlineMatch implements InlineQueryHandler {
 
     }
 
-    private String handlePlaceholder(String string, Hangman hangman) {
-        string = string.replace("word_state", hangman.getCurrentState());
-        string = string.replace("current_errors", String.valueOf(hangman.getErrors()));
-        string = string.replace("max_errors", String.valueOf(hangman.getMaxErrors()));
-        string = string.replace("category", hangman.getCategory());
-        return string;
-    }
-
     private List<InlineQueryResult> getInlineQueryResults() {
         List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
-        inlineQueryResults.add(newInlineQueryResult("match_random", "Categoria casuale", "Caricamento"));
-        wordCategory.forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category, "Caricamento")));
+        inlineQueryResults.add(newInlineQueryResult("match_random", "Categoria casuale", "Clicca per cominciare una nuova partita", "Caricamento", cancelButton));
+        wordCategory.forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category, "Clicca per cominciare una nuova partita", "Caricamento", cancelButton)));
         return inlineQueryResults;
     }
 
-    private InlineQueryResult newInlineQueryResult(String id, String title, String message) {
+    private InlineQueryResult newInlineQueryResult(String id, String title, String description, String message, InlineKeyboardMarkup cancelButton) {
         return new InlineQueryResultArticle(
                 id,
                 title,
                 new InputTextMessageContent(Text.parseHtml(message), null),
                 cancelButton,
-                "Clicca per cominciare una nuova partita"
+                description
         );
     }
 

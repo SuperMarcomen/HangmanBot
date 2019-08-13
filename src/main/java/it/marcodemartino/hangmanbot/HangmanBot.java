@@ -2,11 +2,11 @@ package it.marcodemartino.hangmanbot;
 
 import io.github.ageofwar.telejam.Bot;
 import io.github.ageofwar.telejam.LongPollingBot;
-import it.marcodemartino.hangmanbot.callback.CancelMessage;
 import it.marcodemartino.hangmanbot.callback.LetterClick;
+import it.marcodemartino.hangmanbot.callback.StartMatch;
 import it.marcodemartino.hangmanbot.commands.Start;
 import it.marcodemartino.hangmanbot.inline.AdminUtilities;
-import it.marcodemartino.hangmanbot.inline.StartInlineMatch;
+import it.marcodemartino.hangmanbot.inline.InlineResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.DatabaseManager;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
@@ -29,6 +29,7 @@ public class HangmanBot extends LongPollingBot {
         String generalMessage = "<b>Categoria:</b> category\n<b>Parola da indovinare:</b>\nword_state\n<b>Errori:</b> current_errors/max_errors";
 
         DatabaseManager databaseManager = new DatabaseManager("localhost", username, password, "test", "bot", 3306);
+        databaseManager.start();
         StatsManager statsManager = new StatsManager(databaseManager);
 
         events.registerUpdateHandler(
@@ -40,11 +41,11 @@ public class HangmanBot extends LongPollingBot {
         );
 
         events.registerUpdateHandler(
-                new StartInlineMatch(bot, statsManager, matches, generalMessage, getWordsFiles())
+                new StartMatch(bot, statsManager, matches, generalMessage)
         );
 
         events.registerUpdateHandler(
-                new CancelMessage(bot)
+                new InlineResult(bot, statsManager, matches, getWordsFiles())
         );
 
     }

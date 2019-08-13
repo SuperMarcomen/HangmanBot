@@ -7,7 +7,7 @@ import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.text.Text;
-import it.marcodemartino.hangmanbot.inline.StartInlineMatch;
+import it.marcodemartino.hangmanbot.inline.InlineResult;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
@@ -35,11 +35,19 @@ public class LetterClick implements CallbackDataHandler {
 
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
 
-        /* Match already ended */
+        /* Match already ended or not found*/
         if(hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
                     .text("Questa partita è già finita o è stata avviata prima che il bot venisse riavviato");
+            bot.execute(answerCallbackQuery);
+            return;
+        }
+
+        if (!hangman.isMultiplayer() && hangman.getSenderId() != callbackQuery.getSender().getId()) {
+            AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
+                    .callbackQuery(callbackQuery)
+                    .text("Può giocare soltato chi ha inviato il messaggio!");
             bot.execute(answerCallbackQuery);
             return;
         }
@@ -77,7 +85,7 @@ public class LetterClick implements CallbackDataHandler {
         bot.execute(editMessageText);
         bot.execute(answerCallbackQuery);
 
-        if (matches.isEmpty() && !StartInlineMatch.isStartMatch()) {
+        if (matches.isEmpty() && !InlineResult.isStartMatch()) {
             SendMessage sendMessage = new SendMessage()
                     .chat(229856560L)
                     .text("Bot spento con successo!");

@@ -4,6 +4,7 @@ import io.github.ageofwar.telejam.inline.CallbackDataInlineKeyboardButton;
 import io.github.ageofwar.telejam.inline.InlineKeyboardButton;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +14,11 @@ public class Hangman {
     @Getter
     private String word;
     @Getter
+    private long senderId;
+    @Getter
+    @Setter
+    private boolean multiplayer;
+    @Getter
     private String category;
     private List<Character> guessedLetters;
     private List<Character> wrongLetters;
@@ -21,8 +27,9 @@ public class Hangman {
     @Getter
     private int maxErrors;
 
-    public Hangman(String word, String category, int maxErrors) {
+    public Hangman(String word, long senderId, String category, int maxErrors) {
         this.word = word;
+        this.senderId = senderId;
         this.category = category;
         this.maxErrors = maxErrors;
         guessedLetters = new ArrayList<>();
@@ -73,11 +80,9 @@ public class Hangman {
 
     public InlineKeyboardMarkup generateKeyboard() {
         String alphabet = "abcdefghijklmnopqrstuvwxyz";
-        for (Character character : guessedLetters)
-            alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
-
-        for (Character character : wrongLetters)
-            alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
+        for (Character character : alphabet.toCharArray())
+            if (guessedLetters.contains(character) || wrongLetters.contains(character))
+                alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
 
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (char c : alphabet.toCharArray()) {

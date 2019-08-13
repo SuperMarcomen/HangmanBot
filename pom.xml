@@ -6,7 +6,7 @@
 
     <groupId>it.marcodemartino</groupId>
     <artifactId>HangmanBot</artifactId>
-    <version>0.1</version>
+    <version>1.1</version>
 
     <build>
         <finalName>${project.name}-${project.version}</finalName>
@@ -71,21 +71,33 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.github.kskelm</groupId>
-            <artifactId>baringo</artifactId>
-            <version>v1.0.0</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.28</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.28</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.28</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.3.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
             <artifactId>mariadb-java-client</artifactId>
             <version>2.4.3</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.knowm.xchart</groupId>
-            <artifactId>xchart</artifactId>
-            <version>3.5.4</version>
         </dependency>
 
         <dependency>
@@ -100,6 +112,7 @@
             <version>1.16.20</version>
             <scope>provided</scope>
         </dependency>
+
     </dependencies>
 
 </project>

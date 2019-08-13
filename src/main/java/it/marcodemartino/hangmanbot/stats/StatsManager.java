@@ -19,6 +19,10 @@ public class StatsManager {
         userStatistics = databaseManager.getAllUserStatistics();
     }
 
+    public UserStats getUserStats(long userId) {
+        return userStatistics.get(userId);
+    }
+
     public static void reloadUsers() throws SQLException {
         userStatistics = databaseManager.getAllUserStatistics();
     }
