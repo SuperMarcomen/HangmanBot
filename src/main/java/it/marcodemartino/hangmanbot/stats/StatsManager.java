@@ -2,9 +2,6 @@ package it.marcodemartino.hangmanbot.stats;
 
 import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
-import it.marcodemartino.hangmanbot.stats.chart.StatsBarChart;
-import javafx.application.Application;
-import javafx.application.Platform;
 
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -22,15 +19,11 @@ public class StatsManager {
         userStatistics = databaseManager.getAllUserStatistics();
     }
 
-    static {
-        new Thread(() -> Application.launch(StatsBarChart.class)).start();
-    }
-
     public static void reloadUsers() throws SQLException {
         userStatistics = databaseManager.getAllUserStatistics();
     }
 
-    public static List<UserStats> getBestUsers() {
+    public List<UserStats> getBestUsers() {
         return userStatistics.values().stream()
                 .sorted(Comparator.comparingLong(UserStats::getSummedStats)
                         .reversed())
@@ -64,7 +57,4 @@ public class StatsManager {
         return userStats;
     }
 
-    public void generateChart() {
-        Platform.runLater(StatsBarChart::saveChart);
-    }
 }

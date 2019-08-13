@@ -52,7 +52,7 @@ public class Hangman {
             return GuessResult.LETTER_GUESSED;
         } else {
             wrongLetters.add(c);
-            errors++;
+            if (errors < maxErrors) errors++;
             return GuessResult.LETTER_WRONG;
         }
     }

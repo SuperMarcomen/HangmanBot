@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class HangmanBot extends LongPollingBot {
 
-    public HangmanBot(Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
+    public HangmanBot(String username, String password, Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
         super(bot);
         events.registerCommand(
                 new Start(bot), "start"
@@ -31,8 +31,12 @@ public class HangmanBot extends LongPollingBot {
 
         String generalMessage = "<b>Categoria:</b> category\n<b>Parola da indovinare:</b>\nword_state\n<b>Errori:</b> current_errors/max_errors";
 
-        DatabaseManager databaseManager = new DatabaseManager("localhost", "user", "bella", "test", "bot", 3306);
+        DatabaseManager databaseManager = new DatabaseManager("localhost", username, password, "test", "bot", 3306);
         StatsManager statsManager = new StatsManager(databaseManager);
+
+        events.registerUpdateHandler(
+                new LetterClick(bot, statsManager, matches, generalMessage)
+        );
 
         events.registerUpdateHandler(
                 new AdminUtilities(bot)
@@ -43,25 +47,24 @@ public class HangmanBot extends LongPollingBot {
         );
 
         events.registerUpdateHandler(
-                new LetterClick(bot, statsManager, matches, generalMessage)
-        );
-
-        events.registerUpdateHandler(
                 new CancelMessage(bot)
         );
 
     }
 
     public static void main(String[] args) throws IOException, SQLException {
-        if (args.length != 1) {
-            System.err.println("Pass the bot token as unique program argument");
+        if (args.length < 2) {
+            System.err.println("Pass the bot token as unique program argument. And also the database username and password");
             System.exit(1);
         }
         String token = args[0];
         Bot bot = Bot.fromToken(token);
 
         Map<String, Hangman> matches = new HashMap<>();
-        HangmanBot hangmanBOT = new HangmanBot(bot, matches);
+
+        String password = args.length < 3 ? null : args[2];
+
+        HangmanBot hangmanBOT = new HangmanBot(args[1], password, bot, matches);
         hangmanBOT.run();
     }
 
