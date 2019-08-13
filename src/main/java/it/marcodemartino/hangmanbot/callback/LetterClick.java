@@ -39,7 +39,7 @@ public class LetterClick implements CallbackDataHandler {
         if(hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text("Questa partita è già finita");
+                    .text("Questa partita è già finita o è stata avviata prima che il bot venisse riavviato");
             bot.execute(answerCallbackQuery);
             return;
         }
@@ -47,45 +47,35 @@ public class LetterClick implements CallbackDataHandler {
         char c = s.replace("letter_", "").charAt(0);
         GuessResult guessResult = hangman.guessLetter(c);
 
-        /* New letter was not already said */
-        if (!guessResult.equals(GuessResult.LETTER_ALREADY_SAID)) {
-            EditMessageText editMessageText = new EditMessageText()
-                    .text(Text.parseHtml(handlePlaceholder(generalMessage, hangman)))
-                    .replyMarkup(hangman.generateKeyboard())
-                    .inlineMessage(callbackQuery.getInlineMessageId().get());
-            bot.execute(editMessageText);
-        }
+        /* Preparing the messages */
+        StringBuilder message = new StringBuilder(handlePlaceholder(generalMessage, hangman));
 
-        /* Checking if match should end */
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                 .callbackQuery(callbackQuery)
                 .text(getResponseMessage(guessResult));
+
+        EditMessageText editMessageText = new EditMessageText()
+                .inlineMessage(callbackQuery.getInlineMessageId().get());
 
         /* Increasing stats */
         statsManager.increaseStats(callbackQuery.getSender(), guessResult);
 
         GuessResult status = hangman.getStatus();
-        /* Match is not ended */
-        if(status == null) {
-            bot.execute(answerCallbackQuery);
-            return;
-        }
+        /* Match is ended: updating the messages */
+        if (status != null) {
+            answerCallbackQuery.text(getResponseMessage(status));
+            if (status.equals(GuessResult.MATCH_WIN)) message.append("\n\n🎊 Hai vinto!");
+            else
+                message.append("\n\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
+            matches.remove(callbackQuery.getInlineMessageId().get());
+        } else
+            editMessageText.replyMarkup(hangman.generateKeyboard());
 
-        /* Alerting match is ended */
-        answerCallbackQuery.text(getResponseMessage(status));
-        bot.execute(answerCallbackQuery);
+        editMessageText.text(Text.parseHtml(message.toString()));
 
-        matches.remove(callbackQuery.getInlineMessageId().get());
-
-        /* Editing the message */
-        StringBuilder message = new StringBuilder(generalMessage);
-        if (status.equals(GuessResult.MATCH_WIN)) message.append("\n\n🎊 Hai vinto!");
-        else message.append("\n\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
-
-        EditMessageText editMessageText = new EditMessageText()
-                .text(Text.parseHtml(handlePlaceholder(message.toString(), hangman)))
-                .inlineMessage(callbackQuery.getInlineMessageId().get());
+        /* Alerting match status */
         bot.execute(editMessageText);
+        bot.execute(answerCallbackQuery);
 
         if (matches.isEmpty() && !StartInlineMatch.isStartMatch()) {
             SendMessage sendMessage = new SendMessage()

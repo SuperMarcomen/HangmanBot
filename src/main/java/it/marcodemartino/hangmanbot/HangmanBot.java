@@ -16,10 +16,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HangmanBot extends LongPollingBot {
 
@@ -63,9 +60,15 @@ public class HangmanBot extends LongPollingBot {
         Map<String, Hangman> matches = new HashMap<>();
 
         String password = args.length < 3 ? null : args[2];
+        new Thread(new HangmanBot(args[1], password, bot, matches)).start();
 
-        HangmanBot hangmanBOT = new HangmanBot(args[1], password, bot, matches);
-        hangmanBOT.run();
+        Scanner in = new Scanner(System.in);
+        String message = in.nextLine();
+        if (message.equalsIgnoreCase("stop")) {
+            System.out.println("Ok, mi spengo");
+            System.exit(0);
+        }
+
     }
 
     private Map<String, List<String>> getWordsFiles() throws IOException {

@@ -59,7 +59,7 @@ public class Hangman {
 
     public GuessResult getStatus() {
         if (areLetterRight()) return GuessResult.MATCH_WIN;
-        if(errors >= maxErrors) return GuessResult.MATCH_LOSE;
+        if (errors >= maxErrors) return GuessResult.MATCH_LOSE;
         return null;
     }
 
