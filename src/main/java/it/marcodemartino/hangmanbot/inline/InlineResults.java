@@ -4,6 +4,7 @@ import io.github.ageofwar.telejam.Bot;
 import io.github.ageofwar.telejam.inline.*;
 import io.github.ageofwar.telejam.methods.AnswerInlineQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
+import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.languages.Localization;
@@ -80,7 +81,7 @@ public class InlineResults implements InlineQueryHandler {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Date date = new Date();
 
-        System.out.format("\nOrario: %s\nCategoria: %s\nParola: %s\nUserID: %s\nUsername: %s\nNome: %s\n",
+        String message = String.format("\nOrario: %s\nCategoria: %s\nParola: %s\nUserID: %s\nUsername: %s\nNome: %s\n",
                 formatter.format(date),
                 category,
                 hangman.getWord(),
@@ -88,6 +89,12 @@ public class InlineResults implements InlineQueryHandler {
                 chosenInlineResult.getSender().getUsername().orElse("none"),
                 chosenInlineResult.getSender().getName()
         );
+        System.out.println(message);
+
+        SendMessage sendMessage = new SendMessage()
+                .text(message)
+                .chat(-1001296534897L);
+        bot.execute(sendMessage);
     }
 
     @Override
