@@ -19,7 +19,7 @@ public class AdminUtilities implements InlineQueryHandler {
         if (inlineQuery.getSender().getId() != 229856560L) return;
 
         if (inlineQuery.getQuery().equalsIgnoreCase("stop")) {
-            InlineResult.setStartMatch(false);
+            InlineResults.setStartMatch(false);
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
                     .cacheTime(1)

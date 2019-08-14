@@ -7,25 +7,27 @@ import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.text.Text;
-import it.marcodemartino.hangmanbot.inline.InlineResult;
+import it.marcodemartino.hangmanbot.inline.InlineResults;
+import it.marcodemartino.hangmanbot.languages.Localization;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class LetterClick implements CallbackDataHandler {
 
+    private final Localization localization;
     private final Bot bot;
     private StatsManager statsManager;
     private Map<String, Hangman> matches;
-    private final String generalMessage;
 
-    public LetterClick(Bot bot, StatsManager statsManagers, Map<String, Hangman> matches, String generalMessage) {
+    public LetterClick(Localization localization, Bot bot, StatsManager statsManagers, Map<String, Hangman> matches) {
+        this.localization = localization;
         this.bot = bot;
         this.statsManager = statsManagers;
         this.matches = matches;
-        this.generalMessage = generalMessage;
     }
 
     @Override
@@ -34,12 +36,14 @@ public class LetterClick implements CallbackDataHandler {
         if(!callbackQuery.getInlineMessageId().isPresent()) return;
 
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
+        Locale locale = callbackQuery.getSender().getLocale();
 
         /* Match already ended or not found*/
         if(hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text("Questa partita è già finita o è stata avviata prima che il bot venisse riavviato");
+                    .text(localization.getString("match_not_found", locale))
+                    .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
         }
@@ -47,7 +51,8 @@ public class LetterClick implements CallbackDataHandler {
         if (!hangman.isMultiplayer() && hangman.getSenderId() != callbackQuery.getSender().getId()) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text("Può giocare soltato chi ha inviato il messaggio!");
+                    .text(localization.getString("match_not_multiplayer", locale))
+                    .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
         }
@@ -56,7 +61,9 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult guessResult = hangman.guessLetter(c);
 
         /* Preparing the messages */
-        StringBuilder message = new StringBuilder(handlePlaceholder(generalMessage, hangman));
+        String string = localization.getString("generalMatchMessage", locale);
+        string = localization.handlePlaceholder(string, hangman);
+        StringBuilder message = new StringBuilder(string);
 
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                 .callbackQuery(callbackQuery)
@@ -72,9 +79,10 @@ public class LetterClick implements CallbackDataHandler {
         /* Match is ended: updating the messages */
         if (status != null) {
             answerCallbackQuery.text(getResponseMessage(status));
-            if (status.equals(GuessResult.MATCH_WIN)) message.append("\n\n🎊 Hai vinto!");
+            if (status.equals(GuessResult.MATCH_WIN))
+                message.append(localization.getString("win_edit_message", locale));
             else
-                message.append("\n\n⚠ <b>Hai perso!</b> La <b>parola</b> da indovinare era: ").append(hangman.getWord());
+                message.append(localization.handlePlaceholder(localization.getString("lose_edit_message", locale), hangman));
             matches.remove(callbackQuery.getInlineMessageId().get());
         } else
             editMessageText.replyMarkup(hangman.generateKeyboard());
@@ -85,7 +93,7 @@ public class LetterClick implements CallbackDataHandler {
         bot.execute(editMessageText);
         bot.execute(answerCallbackQuery);
 
-        if (matches.isEmpty() && !InlineResult.isStartMatch()) {
+        if (matches.isEmpty() && !InlineResults.isStartMatch()) {
             SendMessage sendMessage = new SendMessage()
                     .chat(229856560L)
                     .text("Bot spento con successo!");
@@ -108,14 +116,5 @@ public class LetterClick implements CallbackDataHandler {
         }
         return "C'è stato un errore";
     }
-
-    private String handlePlaceholder(String string, Hangman hangman) {
-        string = string.replace("word_state", hangman.getCurrentState());
-        string = string.replace("current_errors", String.valueOf(hangman.getErrors()));
-        string = string.replace("max_errors", String.valueOf(hangman.getMaxErrors()));
-        string = string.replace("category", hangman.getCategory());
-        return string;
-    }
-
 
 }

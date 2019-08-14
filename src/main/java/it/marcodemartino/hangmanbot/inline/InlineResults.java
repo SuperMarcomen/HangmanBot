@@ -6,9 +6,10 @@ import io.github.ageofwar.telejam.methods.AnswerInlineQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
+import it.marcodemartino.hangmanbot.languages.Localization;
+import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
-import it.marcodemartino.hangmanbot.logic.Words;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 import it.marcodemartino.hangmanbot.stats.UserStats;
 import lombok.Getter;
@@ -19,22 +20,24 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class InlineResult implements InlineQueryHandler {
+public class InlineResults implements InlineQueryHandler {
 
+    @Getter
+    @Setter
+    private static boolean startMatch = true;
+    private final Localization localization;
     private final Bot bot;
     private StatsManager statsManager;
     private Map<String, Hangman> matches;
-    private Map<Locale, Words> words;
     private InlineKeyboardMarkup cancelButton;
-    @Setter
-    @Getter
-    private static boolean startMatch = true;
+    private final LocalizedWord localizedWord;
 
-    public InlineResult(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, Map<Locale, Words> words) {
+    public InlineResults(Localization localization, LocalizedWord localizedWord, Bot bot, StatsManager statsManager, Map<String, Hangman> matches) {
+        this.localization = localization;
+        this.localizedWord = localizedWord;
         this.bot = bot;
         this.statsManager = statsManager;
         this.matches = matches;
-        this.words = words;
         cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("Annulla", "cancel_message"));
     }
 
@@ -44,10 +47,12 @@ public class InlineResult implements InlineQueryHandler {
         if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop") || chosenInlineResult.getQuery().equalsIgnoreCase("reload")))
             return;
 
-        if (!InlineResult.startMatch) {
+        Locale locale = chosenInlineResult.getSender().getLocale();
+
+        if (!InlineResults.startMatch) {
             EditMessageText editMessageText = new EditMessageText()
                     .inlineMessage(chosenInlineResult.getInlineMessageId().get())
-                    .text(Text.parseHtml("Sto aspettando che le partite in corso per Telegram finiscano.\nL'autore del bot @SuperMarcomen ha richiesto di stoppare il bot per eseguire della manutenzione\nOra non è più possibile cominciare nuove partite."));
+                    .text(Text.parseHtml(localization.getString("waiting_for_stop", locale)));
 
             bot.execute(editMessageText);
             return;
@@ -61,13 +66,15 @@ public class InlineResult implements InlineQueryHandler {
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(chosenInlineResult.getInlineMessageId().get())
                 .replyMarkup(new InlineKeyboardMarkup(buttons))
-                .text("Come vuoi giocare?");
+                .text(localization.getString("choose_play_mode", locale));
 
         bot.execute(editMessageText);
 
-        String category = chosenInlineResult.getResultId().substring(6);
-        Hangman hangman = new Hangman(words.get(chosenInlineResult.getSender().getLocale()).getRandomWord(category), chosenInlineResult.getSender().getId(), category, 5);
+        String category = chosenInlineResult.getResultId().split("_")[1];
+
+        Hangman hangman = new Hangman(localizedWord.getRandomWordFromCategory(category, locale), chosenInlineResult.getSender().getId(), category, 5);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
+        System.out.println(chosenInlineResult.getInlineMessageId().get());
         statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -85,29 +92,33 @@ public class InlineResult implements InlineQueryHandler {
 
     @Override
     public void onInlineQuery(InlineQuery inlineQuery) throws Exception {
-        System.out.println(inlineQuery.getSender().getLocale());
         if (inlineQuery.getQuery().equalsIgnoreCase("stats")) {
-            StringBuilder message = new StringBuilder("<b>Statistiche:</b>\n\n");
+            Locale locale = inlineQuery.getSender().getLocale();
+            StringBuilder message = new StringBuilder(localization.getString("stats_message_title", locale));
 
             for (UserStats user : statsManager.getBestUsers()) {
-                message.append(String.format("<b>%s:</b>\n<i>Lettere indovinate:</i> %d\n<i>Lettere sbagliate:</i> %d\n\n", user.getUsername(), user.getGuessedLetters(), user.getWrongLetters()));
+                message.append(localization.handlePlaceholder(localization.getString("stats_message_body", locale), user));
             }
 
             UserStats userStats = statsManager.getUserStats(inlineQuery.getSender().getId());
-            message.append(String.format("\n<b>Le tue statistiche:</b>\n<i>Lettere indovinate:</i> %d\n<i>Lettere sbagliate:</i> %d", userStats.getGuessedLetters(), userStats.getWrongLetters()));
+            message.append(localization.handlePlaceholder(localization.getString("stats_message_sender", locale), userStats));
 
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
                     .cacheTime(0)
                     .results(
-                            newInlineQueryResult("stats", "Mostra le statistiche", "Clicca per mostrare le statistiche", message.toString(), null)
-                    );
+                            new InlineQueryResultArticle(
+                                    "stats",
+                                    localization.getString("stats_title_result", locale),
+                                    new InputTextMessageContent(Text.parseHtml(localization.getString("stats_description_result", locale)), null),
+                                    null,
+                                    null
+                            ));
             bot.execute(answerInlineQuery);
 
         } else {
             Locale locale = inlineQuery.getSender().getLocale();
             System.out.println(locale);
-            if (!words.containsKey(locale)) locale = Locale.ENGLISH;
 
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
@@ -122,19 +133,25 @@ public class InlineResult implements InlineQueryHandler {
 
     private List<InlineQueryResult> getInlineQueryResults(Locale locale) {
         List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
-        inlineQueryResults.add(newInlineQueryResult("match_random", "Categoria casuale", "Clicca per cominciare una nuova partita", "Caricamento", cancelButton));
-        words.get(locale).getWordCategory().forEach((category, wordList) -> inlineQueryResults.add(newInlineQueryResult("match_" + category, "Categoria: " + category, "Clicca per cominciare una nuova partita", "Caricamento", cancelButton)));
-        return inlineQueryResults;
-    }
-
-    private InlineQueryResult newInlineQueryResult(String id, String title, String description, String message, InlineKeyboardMarkup cancelButton) {
-        return new InlineQueryResultArticle(
-                id,
-                title,
-                new InputTextMessageContent(Text.parseHtml(message), null),
+        inlineQueryResults.add(new InlineQueryResultArticle(
+                "match_random",
+                localization.getString("random_category", locale),
+                new InputTextMessageContent(Text.parseHtml(localization.getString("loading", locale)), null),
                 cancelButton,
-                description
-        );
+                localization.getString("category_result_description", locale)
+        ));
+
+        for (String category : localizedWord.getCategoriesFromLocale(locale)) {
+            inlineQueryResults.add(new InlineQueryResultArticle(
+                    "match_" + category,
+                    localization.getString("category", locale).replace("%category", category),
+                    new InputTextMessageContent(Text.parseHtml(localization.getString("loading", locale)), null),
+                    cancelButton,
+                    localization.getString("category_result_description", locale)
+            ));
+        }
+
+        return inlineQueryResults;
     }
 
 }

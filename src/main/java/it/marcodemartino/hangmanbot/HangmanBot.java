@@ -6,11 +6,14 @@ import it.marcodemartino.hangmanbot.callback.LetterClick;
 import it.marcodemartino.hangmanbot.callback.StartMatch;
 import it.marcodemartino.hangmanbot.commands.Start;
 import it.marcodemartino.hangmanbot.inline.AdminUtilities;
-import it.marcodemartino.hangmanbot.inline.InlineResult;
+import it.marcodemartino.hangmanbot.inline.InlineResults;
+import it.marcodemartino.hangmanbot.languages.Localization;
+import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.logic.Words;
 import it.marcodemartino.hangmanbot.stats.DatabaseManager;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
+import lombok.Getter;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,20 +24,24 @@ import java.util.*;
 
 public class HangmanBot extends LongPollingBot {
 
-    public HangmanBot(String username, String password, Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
+    @Getter
+    private static final List<Locale> SUPPORTED_LANGUAGES = new ArrayList<>();
+
+    public HangmanBot(Localization localization, String username, String password, Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
         super(bot);
+        SUPPORTED_LANGUAGES.add(Locale.ENGLISH);
+        SUPPORTED_LANGUAGES.add(Locale.ITALIAN);
+
         events.registerCommand(
                 new Start(bot), "start"
         );
-
-        String generalMessage = "<b>Categoria:</b> category\n<b>Parola da indovinare:</b>\nword_state\n<b>Errori:</b> current_errors/max_errors";
 
         DatabaseManager databaseManager = new DatabaseManager("localhost", username, password, "test", "bot", 3306);
         databaseManager.start();
         StatsManager statsManager = new StatsManager(databaseManager);
 
         events.registerUpdateHandler(
-                new LetterClick(bot, statsManager, matches, generalMessage)
+                new LetterClick(localization, bot, statsManager, matches)
         );
 
         events.registerUpdateHandler(
@@ -42,11 +49,11 @@ public class HangmanBot extends LongPollingBot {
         );
 
         events.registerUpdateHandler(
-                new StartMatch(bot, statsManager, matches, generalMessage)
+                new StartMatch(localization, bot, matches)
         );
 
         events.registerUpdateHandler(
-                new InlineResult(bot, statsManager, matches, getWordsFiles())
+                new InlineResults(localization, new LocalizedWord(), bot, statsManager, matches)
         );
 
     }
@@ -62,7 +69,7 @@ public class HangmanBot extends LongPollingBot {
         Map<String, Hangman> matches = new HashMap<>();
 
         String password = args.length < 3 ? null : args[2];
-        new Thread(new HangmanBot(args[1], password, bot, matches)).start();
+        new Thread(new HangmanBot(new Localization(), args[1], password, bot, matches)).start();
 
         Scanner in = new Scanner(System.in);
         String message = in.nextLine();

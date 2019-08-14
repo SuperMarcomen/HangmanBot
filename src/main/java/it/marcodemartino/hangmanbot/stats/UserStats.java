@@ -14,7 +14,8 @@ public class UserStats {
     private long guessedLetters;
     private long wrongLetters;
 
-    public UserStats() {
+    public UserStats(String username) {
+        this.username = username;
     }
 
     public long getSummedStats() {

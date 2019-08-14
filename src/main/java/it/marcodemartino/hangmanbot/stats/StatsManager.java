@@ -38,7 +38,7 @@ public class StatsManager {
     public UserStats increaseStats(User user, GuessResult guessResult) throws SQLException {
         UserStats userStats = userStatistics.get(user.getId());
         if (userStats == null) {
-            userStats = new UserStats();
+            userStats = new UserStats(user.getName());
             userStatistics.put(user.getId(), userStats);
         }
 

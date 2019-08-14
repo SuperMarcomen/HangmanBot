@@ -6,23 +6,22 @@ import io.github.ageofwar.telejam.callbacks.CallbackQuery;
 import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.text.Text;
+import it.marcodemartino.hangmanbot.languages.Localization;
 import it.marcodemartino.hangmanbot.logic.Hangman;
-import it.marcodemartino.hangmanbot.stats.StatsManager;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class StartMatch implements CallbackDataHandler {
 
+    private final Localization localization;
     private final Bot bot;
-    private final String generalMessage;
-    private StatsManager statsManager;
     private Map<String, Hangman> matches;
 
-    public StartMatch(Bot bot, StatsManager statsManager, Map<String, Hangman> matches, String generalMessage) {
+    public StartMatch(Localization localization, Bot bot, Map<String, Hangman> matches) {
+        this.localization = localization;
         this.bot = bot;
-        this.statsManager = statsManager;
         this.matches = matches;
-        this.generalMessage = generalMessage;
     }
 
     @Override
@@ -32,6 +31,8 @@ public class StartMatch implements CallbackDataHandler {
         if (!callbackQuery.getData().get().startsWith("player")) return;
 
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
+        Locale locale = callbackQuery.getSender().getLocale();
+
         if (callbackQuery.getData().get().contains("2"))
             hangman.setMultiplayer(true);
 
@@ -39,7 +40,8 @@ public class StartMatch implements CallbackDataHandler {
         if (hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text("Questa partita è già finita o è stata avviata prima che il bot venisse riavviato");
+                    .text(localization.getString("match_not_found", locale))
+                    .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
         }
@@ -47,12 +49,14 @@ public class StartMatch implements CallbackDataHandler {
         if (hangman.getSenderId() != callbackQuery.getSender().getId()) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text("Può scegliere soltato chi ha inviato il messaggio!");
+                    .text(localization.getString("cant_choose_play_mode", locale))
+                    .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
         }
 
-        String message = handlePlaceholder(generalMessage, hangman);
+        String message = localization.getString("generalMatchMessage", locale);
+        message = localization.handlePlaceholder(message, hangman);
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(callbackQuery.getInlineMessageId().get())
@@ -62,11 +66,4 @@ public class StartMatch implements CallbackDataHandler {
         bot.execute(editMessageText);
     }
 
-    private String handlePlaceholder(String string, Hangman hangman) {
-        string = string.replace("word_state", hangman.getCurrentState());
-        string = string.replace("current_errors", String.valueOf(hangman.getErrors()));
-        string = string.replace("max_errors", String.valueOf(hangman.getMaxErrors()));
-        string = string.replace("category", hangman.getCategory());
-        return string;
-    }
 }

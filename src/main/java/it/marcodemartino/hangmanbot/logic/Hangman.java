@@ -80,19 +80,15 @@ public class Hangman {
 
     public InlineKeyboardMarkup generateKeyboard() {
         String alphabet = "abcdefghijklmnopqrstuvwxyz";
-        for (Character character : alphabet.toCharArray())
-            if (guessedLetters.contains(character) || wrongLetters.contains(character))
-                alphabet = alphabet.replace(String.valueOf(character), String.valueOf(character).toUpperCase());
 
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (char c : alphabet.toCharArray()) {
             CallbackDataInlineKeyboardButton button;
 
-            if(c != Character.toLowerCase(c)) //letter is guessed
-                button = new CallbackDataInlineKeyboardButton("-", "letter_" + Character.toLowerCase(c));
+            if (guessedLetters.contains(c) || wrongLetters.contains(c)) //letter was already said
+                button = new CallbackDataInlineKeyboardButton("-", "letter_" + c);
             else
-                button = new CallbackDataInlineKeyboardButton(String.valueOf(c).toUpperCase(), "letter_" + Character.toLowerCase(c));
-
+                button = new CallbackDataInlineKeyboardButton(String.valueOf(c).toUpperCase(), "letter_" + c);
 
             buttons.add(button);
         }
