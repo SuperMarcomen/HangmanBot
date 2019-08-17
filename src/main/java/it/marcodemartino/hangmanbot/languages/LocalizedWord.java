@@ -8,8 +8,28 @@ import java.util.*;
 
 public class LocalizedWord {
 
+    public List<Character> getAlphabetFromLocale(Locale locale) throws FileNotFoundException {
+        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
+
+        File file = new File("alphabet/" + locale.getLanguage() + ".txt");
+        Scanner s = new Scanner(file, "UTF-8");
+        List<Character> list = new ArrayList<>();
+
+        while (s.hasNextLine()) {
+            String string = s.nextLine();
+            System.out.println("string = " + string);
+            System.out.println("charAt(0) = " + string.charAt(0));
+            System.out.println("charAt(1) = " + string.charAt(1));
+
+            list.add(string.charAt(0));
+        }
+        s.close();
+
+        return list;
+    }
+
     public List<String> getCategoriesFromLocale(Locale locale) {
-        if (!HangmanBot.getSUPPORTED_LANGUAGES().contains(locale)) locale = Locale.ENGLISH;
+        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
         List<String> categories = new ArrayList<>();
 
         File folder = new File("words/" + locale.getLanguage() + "/");
@@ -21,7 +41,7 @@ public class LocalizedWord {
     }
 
     public String getRandomWordFromCategory(String category, Locale locale) throws FileNotFoundException {
-        if (!HangmanBot.getSUPPORTED_LANGUAGES().contains(locale)) locale = Locale.ENGLISH;
+        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
         return getRandomWord(category, locale);
     }
@@ -29,7 +49,7 @@ public class LocalizedWord {
     private String getRandomWord(String category, Locale locale) throws FileNotFoundException {
         File file = getRandomFile(category, locale);
 
-        Scanner s = new Scanner(file);
+        Scanner s = new Scanner(file, "UTF-8");
         List<String> list = new ArrayList<>();
         while (s.hasNextLine()) {
             list.add(s.nextLine());
@@ -43,10 +63,9 @@ public class LocalizedWord {
     private File getRandomFile(String category, Locale locale) {
         if (!category.equals("random")) return new File("words/" + locale.getLanguage() + "/" + category + ".txt");
 
-        System.out.println(locale.getLanguage());
         File directory = new File("words/" + locale.getLanguage() + "/");
         List<File> files = Arrays.asList(directory.listFiles());
-        files.remove("Java.txt");
+        files.remove("test.txt");
 
         Random rand = new Random();
         return files.get(rand.nextInt(files.size()));

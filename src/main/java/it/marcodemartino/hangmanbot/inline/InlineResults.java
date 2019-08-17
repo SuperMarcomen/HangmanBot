@@ -117,15 +117,14 @@ public class InlineResults implements InlineQueryHandler {
                             new InlineQueryResultArticle(
                                     "stats",
                                     localization.getString("stats_title_result", locale),
-                                    new InputTextMessageContent(Text.parseHtml(localization.getString("stats_description_result", locale)), null),
+                                    new InputTextMessageContent(Text.parseHtml(message.toString()), null),
                                     null,
-                                    null
+                                    localization.getString("stats_description_result", locale)
                             ));
             bot.execute(answerInlineQuery);
 
         } else {
             Locale locale = inlineQuery.getSender().getLocale();
-            System.out.println(locale);
 
             AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
                     .inlineQuery(inlineQuery)
@@ -138,7 +137,7 @@ public class InlineResults implements InlineQueryHandler {
 
     }
 
-    private List<InlineQueryResult> getInlineQueryResults(Locale locale) {
+    private List<InlineQueryResult> getInlineQueryResults(Locale locale) throws IOException {
         List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
         inlineQueryResults.add(new InlineQueryResultArticle(
                 "match_random",

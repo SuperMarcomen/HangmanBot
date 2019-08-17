@@ -4,15 +4,17 @@ import it.marcodemartino.hangmanbot.HangmanBot;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.UserStats;
 
+import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
 public class Localization {
 
-    public String getString(String key, Locale locale) {
-        if (!HangmanBot.getSUPPORTED_LANGUAGES().contains(locale)) locale = Locale.ENGLISH;
+    public String getString(String key, Locale locale) throws IOException {
+        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
-        ResourceBundle resourceBundle = ResourceBundle.getBundle("languages/lang", locale);
+        ResourceBundle resourceBundle = new UTF8ResourceBundle().newBundle("languages/lang", locale, getClass().getClassLoader(), false);
+
         return resourceBundle.getString(key);
     }
 
@@ -31,6 +33,5 @@ public class Localization {
         string = string.replace("%wrong_letters", String.valueOf(user.getWrongLetters()));
         return string;
     }
-
 
 }

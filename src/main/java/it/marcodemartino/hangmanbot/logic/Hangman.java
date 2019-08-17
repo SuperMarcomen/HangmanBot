@@ -78,11 +78,9 @@ public class Hangman {
         return true;
     }
 
-    public InlineKeyboardMarkup generateKeyboard() {
-        String alphabet = "abcdefghijklmnopqrstuvwxyz";
-
+    public InlineKeyboardMarkup generateKeyboard(List<Character> alphabet) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        for (char c : alphabet.toCharArray()) {
+        for (char c : alphabet) {
             CallbackDataInlineKeyboardButton button;
 
             if (guessedLetters.contains(c) || wrongLetters.contains(c)) //letter was already said

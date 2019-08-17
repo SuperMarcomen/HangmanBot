@@ -9,22 +9,26 @@ import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.inline.InlineResults;
 import it.marcodemartino.hangmanbot.languages.Localization;
+import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
 public class LetterClick implements CallbackDataHandler {
 
     private final Localization localization;
+    private final LocalizedWord localizedWord;
     private final Bot bot;
     private StatsManager statsManager;
     private Map<String, Hangman> matches;
 
-    public LetterClick(Localization localization, Bot bot, StatsManager statsManagers, Map<String, Hangman> matches) {
+    public LetterClick(Localization localization, LocalizedWord localizedWord, Bot bot, StatsManager statsManagers, Map<String, Hangman> matches) {
         this.localization = localization;
+        this.localizedWord = localizedWord;
         this.bot = bot;
         this.statsManager = statsManagers;
         this.matches = matches;
@@ -67,7 +71,7 @@ public class LetterClick implements CallbackDataHandler {
 
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                 .callbackQuery(callbackQuery)
-                .text(getResponseMessage(guessResult));
+                .text(getResponseMessage(guessResult, locale));
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(callbackQuery.getInlineMessageId().get());
@@ -78,14 +82,14 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult status = hangman.getStatus();
         /* Match is ended: updating the messages */
         if (status != null) {
-            answerCallbackQuery.text(getResponseMessage(status));
+            answerCallbackQuery.text(getResponseMessage(status, locale));
             if (status.equals(GuessResult.MATCH_WIN))
                 message.append(localization.getString("win_edit_message", locale));
             else
                 message.append(localization.handlePlaceholder(localization.getString("lose_edit_message", locale), hangman));
             matches.remove(callbackQuery.getInlineMessageId().get());
         } else
-            editMessageText.replyMarkup(hangman.generateKeyboard());
+            editMessageText.replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)));
 
         editMessageText.text(Text.parseHtml(message.toString()));
 
@@ -101,20 +105,20 @@ public class LetterClick implements CallbackDataHandler {
         }
     }
 
-    private String getResponseMessage(GuessResult guessResult) {
+    private String getResponseMessage(GuessResult guessResult, Locale locale) throws IOException {
         switch (guessResult) {
             case LETTER_ALREADY_SAID:
-                return "Lettera già detta";
+                return localization.getString("alert_letter_already_said", locale);
             case LETTER_WRONG:
-                return "Lettera sbagliata";
+                return localization.getString("alert_wrong_letter", locale);
             case LETTER_GUESSED:
-                return "Hai indovinato una lettera";
+                return localization.getString("alert_guessed_letter", locale);
             case MATCH_LOSE:
-                return "Hai perso la partita";
+                return localization.getString("alert_match_lose", locale);
             case MATCH_WIN:
-                return "Hai vinto la partita";
+                return localization.getString("alert_match_win", locale);
         }
-        return "C'è stato un errore";
+        return localization.getString("alert_error", locale);
     }
 
 }

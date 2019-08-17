@@ -7,6 +7,7 @@ import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.text.Text;
 import it.marcodemartino.hangmanbot.languages.Localization;
+import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 
 import java.util.Locale;
@@ -15,11 +16,13 @@ import java.util.Map;
 public class StartMatch implements CallbackDataHandler {
 
     private final Localization localization;
+    private final LocalizedWord localizedWord;
     private final Bot bot;
     private Map<String, Hangman> matches;
 
-    public StartMatch(Localization localization, Bot bot, Map<String, Hangman> matches) {
+    public StartMatch(Localization localization, LocalizedWord localizedWord, Bot bot, Map<String, Hangman> matches) {
         this.localization = localization;
+        this.localizedWord = localizedWord;
         this.bot = bot;
         this.matches = matches;
     }
@@ -60,7 +63,7 @@ public class StartMatch implements CallbackDataHandler {
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(callbackQuery.getInlineMessageId().get())
-                .replyMarkup(hangman.generateKeyboard())
+                .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)))
                 .text(Text.parseHtml(message));
 
         bot.execute(editMessageText);
