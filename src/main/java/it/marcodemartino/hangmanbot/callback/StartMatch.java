@@ -36,9 +36,6 @@ public class StartMatch implements CallbackDataHandler {
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
         Locale locale = callbackQuery.getSender().getLocale();
 
-        if (callbackQuery.getData().get().contains("2"))
-            hangman.setMultiplayer(true);
-
         /* Match already ended or not found*/
         if (hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
@@ -57,6 +54,9 @@ public class StartMatch implements CallbackDataHandler {
             bot.execute(answerCallbackQuery);
             return;
         }
+
+        if (callbackQuery.getData().get().contains("2"))
+            hangman.setMultiplayer(true);
 
         String message = localization.getString("generalMatchMessage", locale);
         message = localization.handlePlaceholder(message, hangman);

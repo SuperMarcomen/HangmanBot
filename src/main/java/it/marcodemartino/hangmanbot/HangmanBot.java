@@ -32,7 +32,6 @@ public class HangmanBot extends LongPollingBot {
         );
 
         DatabaseManager databaseManager = new DatabaseManager("localhost", username, password, "test", "bot", 3306);
-        databaseManager.start();
         StatsManager statsManager = new StatsManager(databaseManager);
 
         events.registerUpdateHandler(
@@ -64,15 +63,14 @@ public class HangmanBot extends LongPollingBot {
         Map<String, Hangman> matches = new HashMap<>();
 
         String password = args.length < 3 ? null : args[2];
-        new Thread(new HangmanBot(new Localization(), new LocalizedWord(), args[1], password, bot, matches)).start();
+        new HangmanBot(new Localization(), new LocalizedWord(), args[1], password, bot, matches).run();
 
-        Scanner in = new Scanner(System.in);
-        String message = in.nextLine();
-        if (message.equalsIgnoreCase("stop")) {
-            System.out.println("Ok, mi spengo");
-            System.exit(0);
-        }
+    }
 
+    @Override
+    public void onError(Throwable t) {
+        super.onError(t);
+        t.printStackTrace();
     }
 
 }

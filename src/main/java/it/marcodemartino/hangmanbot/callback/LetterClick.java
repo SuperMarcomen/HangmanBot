@@ -61,8 +61,8 @@ public class LetterClick implements CallbackDataHandler {
             return;
         }
 
-        char c = s.replace("letter_", "").charAt(0);
-        GuessResult guessResult = hangman.guessLetter(c);
+        String letter = s.replace("letter_", "");
+        GuessResult guessResult = hangman.guessLetter(letter);
 
         /* Preparing the messages */
         String string = localization.getString("generalMatchMessage", locale);

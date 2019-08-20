@@ -13,6 +13,7 @@ public class Hangman {
 
     @Getter
     private String word;
+    private List<Integer> wordArray;
     @Getter
     private long senderId;
     @Getter
@@ -20,8 +21,8 @@ public class Hangman {
     private boolean multiplayer;
     @Getter
     private String category;
-    private List<Character> guessedLetters;
-    private List<Character> wrongLetters;
+    private List<Integer> guessedLetters;
+    private List<Integer> wrongLetters;
     @Getter
     private int errors;
     @Getter
@@ -32,16 +33,27 @@ public class Hangman {
         this.senderId = senderId;
         this.category = category;
         this.maxErrors = maxErrors;
+        wordArray = new ArrayList<>();
         guessedLetters = new ArrayList<>();
         wrongLetters = new ArrayList<>();
+
+        final int length = word.length();
+        for (int offset = 0; offset < length; ) {
+            final int codepoint = word.codePointAt(offset);
+            wordArray.add(codepoint);
+            offset += Character.charCount(codepoint);
+        }
     }
 
     public String getCurrentState() {
         StringBuilder currentWord = new StringBuilder();
-        for (char c : word.toCharArray()) {
-            if(guessedLetters.contains(Character.toLowerCase(c)))
-                currentWord.append(c).append(" ");
-            else if (c == ' ')
+        GuessResult guessResult = getStatus();
+        if (guessResult != null && guessResult.equals(GuessResult.MATCH_WIN)) return word;
+
+        for (int codepoint : wordArray) {
+            if (guessedLetters.contains(Character.toLowerCase(codepoint)))
+                currentWord.append(Character.toChars(codepoint)).append(" ");
+            else if (Character.toChars(codepoint)[0] == ' ')
                 currentWord.append("  ");
             else
                 currentWord.append("- ");
@@ -50,18 +62,31 @@ public class Hangman {
         return currentWord.toString();
     }
 
-    public GuessResult guessLetter(char c) {
-        if (guessedLetters.contains(c) || wrongLetters.contains(c))
-            return GuessResult.LETTER_ALREADY_SAID;
+    public GuessResult guessLetter(String letter) {
+        final int length = letter.length();
+        GuessResult guessResult = null;
 
-        if (word.toLowerCase().indexOf(c) != -1) {
-            guessedLetters.add(c);
-            return GuessResult.LETTER_GUESSED;
-        } else {
-            wrongLetters.add(c);
-            if (errors < maxErrors) errors++;
-            return GuessResult.LETTER_WRONG;
+        for (int offset = 0; offset < length; ) {
+            final int codepoint = letter.toLowerCase().codePointAt(offset);
+
+            if (guessedLetters.contains(codepoint) || wrongLetters.contains(codepoint)) {
+                guessResult = GuessResult.LETTER_ALREADY_SAID;
+                continue;
+            }
+
+            if (wordArray.stream().anyMatch(c -> Character.toLowerCase(c) == codepoint)) {
+                guessedLetters.add(codepoint);
+                guessResult = GuessResult.LETTER_GUESSED;
+            } else {
+                wrongLetters.add(codepoint);
+                if (errors < maxErrors) errors++;
+                return GuessResult.LETTER_WRONG;
+            }
+
+            offset += Character.charCount(codepoint);
         }
+
+        return guessResult;
     }
 
     public GuessResult getStatus() {
@@ -71,24 +96,30 @@ public class Hangman {
     }
 
     private boolean areLetterRight() {
-        for (char c : word.toLowerCase().toCharArray())
-            if (c != ' ' && !guessedLetters.contains(c))
-                return false;
-
+        for (Integer codepoint : wordArray) {
+            if (!guessedLetters.contains(Character.toLowerCase(codepoint))) return false;
+        }
         return true;
     }
 
-    public InlineKeyboardMarkup generateKeyboard(List<Character> alphabet) {
+    public InlineKeyboardMarkup generateKeyboard(List<String> alphabet) {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
-        for (char c : alphabet) {
-            CallbackDataInlineKeyboardButton button;
+        for (String letter : alphabet) {
 
-            if (guessedLetters.contains(c) || wrongLetters.contains(c)) //letter was already said
-                button = new CallbackDataInlineKeyboardButton("-", "letter_" + c);
-            else
-                button = new CallbackDataInlineKeyboardButton(String.valueOf(c).toUpperCase(), "letter_" + c);
+            final int length = letter.length();
+            for (int offset = 0; offset < length; ) {
+                final int codepoint = letter.codePointAt(offset);
 
-            buttons.add(button);
+                CallbackDataInlineKeyboardButton button;
+
+                if (guessedLetters.contains(Character.toLowerCase(codepoint)) || wrongLetters.contains(Character.toLowerCase(codepoint))) //letter was already said
+                    button = new CallbackDataInlineKeyboardButton("-", "letter_" + letter);
+                else
+                    button = new CallbackDataInlineKeyboardButton(letter, "letter_" + letter);
+
+                buttons.add(button);
+                offset += Character.charCount(codepoint);
+            }
         }
 
         return InlineKeyboardMarkup.fromColumns(6, buttons);

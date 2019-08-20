@@ -8,20 +8,15 @@ import java.util.*;
 
 public class LocalizedWord {
 
-    public List<Character> getAlphabetFromLocale(Locale locale) throws FileNotFoundException {
+    public List<String> getAlphabetFromLocale(Locale locale) throws FileNotFoundException {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
         File file = new File("alphabet/" + locale.getLanguage() + ".txt");
         Scanner s = new Scanner(file, "UTF-8");
-        List<Character> list = new ArrayList<>();
+        List<String> list = new ArrayList<>();
 
         while (s.hasNextLine()) {
-            String string = s.nextLine();
-            System.out.println("string = " + string);
-            System.out.println("charAt(0) = " + string.charAt(0));
-            System.out.println("charAt(1) = " + string.charAt(1));
-
-            list.add(string.charAt(0));
+            list.add(s.nextLine());
         }
         s.close();
 

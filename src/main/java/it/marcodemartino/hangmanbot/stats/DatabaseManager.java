@@ -4,7 +4,7 @@ import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatabaseManager extends Thread {
+public class DatabaseManager {
 
     private final String hostname;
     private final String username;
