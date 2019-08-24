@@ -75,7 +75,6 @@ public class InlineResults implements InlineQueryHandler {
 
         Hangman hangman = new Hangman(localizedWord.getRandomWordFromCategory(category, locale), chosenInlineResult.getSender().getId(), category, 5);
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
-        System.out.println(chosenInlineResult.getInlineMessageId().get());
         statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
 
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -89,7 +88,6 @@ public class InlineResults implements InlineQueryHandler {
                 chosenInlineResult.getSender().getUsername().orElse("none"),
                 chosenInlineResult.getSender().getName()
         );
-        System.out.println(message);
 
         SendMessage sendMessage = new SendMessage()
                 .text(message)

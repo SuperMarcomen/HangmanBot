@@ -29,7 +29,8 @@ public class StatsManager {
 
     public List<UserStats> getBestUsers() {
         return userStatistics.values().stream()
-                .sorted(Comparator.comparingLong(UserStats::getSummedStats)
+                .filter(userStats -> userStats.getStartedMatches() >= 50)
+                .sorted(Comparator.comparingDouble(UserStats::getRatio)
                         .reversed())
                 .limit(5)
                 .collect(Collectors.toList());

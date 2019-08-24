@@ -19,12 +19,12 @@ public class LocalizedWord {
             list.add(s.nextLine());
         }
         s.close();
-
         return list;
     }
 
     public List<String> getCategoriesFromLocale(Locale locale) {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
+
         List<String> categories = new ArrayList<>();
 
         File folder = new File("words/" + locale.getLanguage() + "/");
@@ -32,6 +32,7 @@ public class LocalizedWord {
             if (file.isDirectory()) continue;
             categories.add(file.getName().replace(".txt", ""));
         }
+
         return categories;
     }
 
@@ -60,7 +61,7 @@ public class LocalizedWord {
 
         File directory = new File("words/" + locale.getLanguage() + "/");
         List<File> files = Arrays.asList(directory.listFiles());
-        files.remove("test.txt");
+        files.remove("Java.txt");
 
         Random rand = new Random();
         return files.get(rand.nextInt(files.size()));

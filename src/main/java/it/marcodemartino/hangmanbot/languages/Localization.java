@@ -14,7 +14,6 @@ public class Localization {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
         ResourceBundle resourceBundle = new UTF8ResourceBundle().newBundle("languages/lang", locale, getClass().getClassLoader(), false);
-
         return resourceBundle.getString(key);
     }
 
@@ -31,6 +30,7 @@ public class Localization {
         string = string.replace("%username", user.getUsername());
         string = string.replace("%guessed_letters", String.valueOf(user.getGuessedLetters()));
         string = string.replace("%wrong_letters", String.valueOf(user.getWrongLetters()));
+        string = string.replace("%ratio", String.format("%.2f", user.getRatio()));
         return string;
     }
 

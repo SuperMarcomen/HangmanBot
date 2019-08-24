@@ -5,9 +5,7 @@ import io.github.ageofwar.telejam.callbacks.CallbackDataHandler;
 import io.github.ageofwar.telejam.callbacks.CallbackQuery;
 import io.github.ageofwar.telejam.methods.AnswerCallbackQuery;
 import io.github.ageofwar.telejam.methods.EditMessageText;
-import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.text.Text;
-import it.marcodemartino.hangmanbot.inline.InlineResults;
 import it.marcodemartino.hangmanbot.languages.Localization;
 import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
@@ -70,8 +68,7 @@ public class LetterClick implements CallbackDataHandler {
         StringBuilder message = new StringBuilder(string);
 
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
-                .callbackQuery(callbackQuery)
-                .text(getResponseMessage(guessResult, locale));
+                .callbackQuery(callbackQuery);
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(callbackQuery.getInlineMessageId().get());
@@ -88,21 +85,20 @@ public class LetterClick implements CallbackDataHandler {
             else
                 message.append(localization.handlePlaceholder(localization.getString("lose_edit_message", locale), hangman));
             matches.remove(callbackQuery.getInlineMessageId().get());
-        } else
-            editMessageText.replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)));
+        } else {
+            editMessageText
+                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)));
+            answerCallbackQuery
+                    .text(getResponseMessage(guessResult, locale));
+        }
 
         editMessageText.text(Text.parseHtml(message.toString()));
 
         /* Alerting match status */
-        bot.execute(editMessageText);
+        if (!guessResult.equals(GuessResult.LETTER_ALREADY_SAID))
+            bot.execute(editMessageText);
         bot.execute(answerCallbackQuery);
 
-        if (matches.isEmpty() && !InlineResults.isStartMatch()) {
-            SendMessage sendMessage = new SendMessage()
-                    .chat(229856560L)
-                    .text("Bot spento con successo!");
-            bot.execute(sendMessage);
-        }
     }
 
     private String getResponseMessage(GuessResult guessResult, Locale locale) throws IOException {

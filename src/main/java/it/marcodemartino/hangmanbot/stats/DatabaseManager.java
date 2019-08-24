@@ -22,8 +22,6 @@ public class DatabaseManager {
         this.database = database;
         this.tableName = tableName;
         this.port = port;
-
-        System.out.printf("Hostname: %s Username: %s Password: %s Database: %s TableName: %s Port: %s\n", hostname, username, password, database, tableName, port);
     }
 
     public void updateUserStatistics(long userId, UserStats userStats) throws SQLException {

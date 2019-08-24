@@ -18,8 +18,12 @@ public class UserStats {
         this.username = username;
     }
 
-    public long getSummedStats() {
-        return guessedLetters - (wrongLetters / 4);
+    public double getRatio() {
+        try {
+            return (float) guessedLetters / ((float) guessedLetters + (float) wrongLetters);
+        } catch (ArithmeticException e) {
+            return 0;
+        }
     }
 
     public void increaseStartedMatches() {

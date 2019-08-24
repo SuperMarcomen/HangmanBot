@@ -40,6 +40,7 @@ public class Hangman {
         final int length = word.length();
         for (int offset = 0; offset < length; ) {
             final int codepoint = word.codePointAt(offset);
+            if (Character.toChars(codepoint)[0] == ' ') continue;
             wordArray.add(codepoint);
             offset += Character.charCount(codepoint);
         }
@@ -63,20 +64,16 @@ public class Hangman {
     }
 
     public GuessResult guessLetter(String letter) {
+        if (letter.equals("-")) return GuessResult.LETTER_ALREADY_SAID;
+
         final int length = letter.length();
-        GuessResult guessResult = null;
+        List<Integer> codepoints = new ArrayList<>();
 
         for (int offset = 0; offset < length; ) {
             final int codepoint = letter.toLowerCase().codePointAt(offset);
 
-            if (guessedLetters.contains(codepoint) || wrongLetters.contains(codepoint)) {
-                guessResult = GuessResult.LETTER_ALREADY_SAID;
-                continue;
-            }
-
             if (wordArray.stream().anyMatch(c -> Character.toLowerCase(c) == codepoint)) {
-                guessedLetters.add(codepoint);
-                guessResult = GuessResult.LETTER_GUESSED;
+                codepoints.add(codepoint);
             } else {
                 wrongLetters.add(codepoint);
                 if (errors < maxErrors) errors++;
@@ -86,7 +83,8 @@ public class Hangman {
             offset += Character.charCount(codepoint);
         }
 
-        return guessResult;
+        guessedLetters.addAll(codepoints);
+        return GuessResult.LETTER_GUESSED;
     }
 
     public GuessResult getStatus() {
@@ -113,7 +111,7 @@ public class Hangman {
                 CallbackDataInlineKeyboardButton button;
 
                 if (guessedLetters.contains(Character.toLowerCase(codepoint)) || wrongLetters.contains(Character.toLowerCase(codepoint))) //letter was already said
-                    button = new CallbackDataInlineKeyboardButton("-", "letter_" + letter);
+                    button = new CallbackDataInlineKeyboardButton("-", "letter_-");
                 else
                     button = new CallbackDataInlineKeyboardButton(letter, "letter_" + letter);
 

@@ -13,7 +13,9 @@ import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.DatabaseManager;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -59,6 +61,7 @@ public class HangmanBot extends LongPollingBot {
         }
         String token = args[0];
         Bot bot = Bot.fromToken(token);
+        System.setOut(new DatePrintStream(System.out, new PrintStream(new FileOutputStream("out.log"))));
 
         Map<String, Hangman> matches = new HashMap<>();
 

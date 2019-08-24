@@ -6,7 +6,7 @@
 
     <groupId>it.marcodemartino</groupId>
     <artifactId>HangmanBot</artifactId>
-    <version>1.1</version>
+    <version>1.5</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
