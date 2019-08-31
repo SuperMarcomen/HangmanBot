@@ -3,32 +3,24 @@ package it.marcodemartino.hangmanbot.stats;
 import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 
-import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class StatsManager {
 
-    private static DatabaseManager databaseManager;
-    private static Map<Long, UserStats> userStatistics;
+    private DatabaseManager databaseManager;
 
-    public StatsManager(DatabaseManager databaseManager) throws SQLException {
-        StatsManager.databaseManager = databaseManager;
-        userStatistics = databaseManager.getAllUserStatistics();
+    public StatsManager(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
     }
 
     public UserStats getUserStats(long userId) {
-        return userStatistics.get(userId);
-    }
-
-    public static void reloadUsers() throws SQLException {
-        userStatistics = databaseManager.getAllUserStatistics();
+        return databaseManager.getUserStatistics(userId);
     }
 
     public List<UserStats> getBestUsers() {
-        return userStatistics.values().stream()
+        return databaseManager.getAllUserStatistics().values().stream()
                 .filter(userStats -> userStats.getStartedMatches() >= 50)
                 .sorted(Comparator.comparingDouble(UserStats::getRatio)
                         .reversed())
@@ -36,12 +28,11 @@ public class StatsManager {
                 .collect(Collectors.toList());
     }
 
-    public UserStats increaseStats(User user, GuessResult guessResult) throws SQLException {
-        UserStats userStats = userStatistics.get(user.getId());
-        if (userStats == null) {
-            userStats = new UserStats(user.getName());
-            userStatistics.put(user.getId(), userStats);
-        }
+    public UserStats increaseStats(User user, GuessResult guessResult) {
+        UserStats userStats = databaseManager.getUserStatistics(user.getId());
+        if (userStats == null)
+            userStats = new UserStats(user.getName(), user.getId());
+
 
         if (user.getUsername().isPresent()) userStats.setUsername(user.getUsername().get());
         else userStats.setUsername(user.getFirstName());
@@ -58,7 +49,7 @@ public class StatsManager {
                 break;
         }
 
-        databaseManager.updateUserStatistics(user.getId(), userStats);
+        databaseManager.updateUserStatistics(userStats);
         return userStats;
     }
 

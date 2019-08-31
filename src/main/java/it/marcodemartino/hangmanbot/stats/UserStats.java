@@ -10,12 +10,15 @@ public class UserStats {
 
     @Setter
     private String username;
+    @Getter
+    private long userId;
     private long startedMatches;
     private long guessedLetters;
     private long wrongLetters;
 
-    public UserStats(String username) {
+    public UserStats(String username, long userId) {
         this.username = username;
+        this.userId = userId;
     }
 
     public double getRatio() {

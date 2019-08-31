@@ -16,14 +16,13 @@ import it.marcodemartino.hangmanbot.stats.StatsManager;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.sql.SQLException;
 import java.util.*;
 
 public class HangmanBot extends LongPollingBot {
 
     public static final List<Locale> SUPPORTED_LANGUAGES = new ArrayList<>();
 
-    public HangmanBot(Localization localization, LocalizedWord localizedWord, String username, String password, Bot bot, Map<String, Hangman> matches) throws IOException, SQLException {
+    public HangmanBot(Localization localization, LocalizedWord localizedWord, Bot bot, Map<String, Hangman> matches) {
         super(bot);
         SUPPORTED_LANGUAGES.add(Locale.ENGLISH);
         SUPPORTED_LANGUAGES.add(Locale.ITALIAN);
@@ -33,7 +32,7 @@ public class HangmanBot extends LongPollingBot {
                 new Start(localization, bot), "start"
         );
 
-        DatabaseManager databaseManager = new DatabaseManager("localhost", username, password, "test", "bot", 3306);
+        DatabaseManager databaseManager = new DatabaseManager();
         StatsManager statsManager = new StatsManager(databaseManager);
 
         events.registerUpdateHandler(
@@ -54,19 +53,19 @@ public class HangmanBot extends LongPollingBot {
 
     }
 
-    public static void main(String[] args) throws IOException, SQLException {
-        if (args.length < 2) {
-            System.err.println("Pass the bot token as unique program argument. And also the database username and password");
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.err.println("Pass the bot token as unique program argument.");
             System.exit(1);
         }
+
         String token = args[0];
         Bot bot = Bot.fromToken(token);
         System.setOut(new DatePrintStream(System.out, new PrintStream(new FileOutputStream("out.log"))));
 
         Map<String, Hangman> matches = new HashMap<>();
 
-        String password = args.length < 3 ? null : args[2];
-        new HangmanBot(new Localization(), new LocalizedWord(), args[1], password, bot, matches).run();
+        new HangmanBot(new Localization(), new LocalizedWord(), bot, matches).run();
 
     }
 
