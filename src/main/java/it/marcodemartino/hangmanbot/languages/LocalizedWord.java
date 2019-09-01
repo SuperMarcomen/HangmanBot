@@ -62,6 +62,7 @@ public class LocalizedWord {
         File directory = new File("words/" + locale.getLanguage() + "/");
         List<File> files = Arrays.asList(directory.listFiles());
         files.remove("Java.txt");
+        files.remove("Hearthstone.txt");
 
         Random rand = new Random();
         return files.get(rand.nextInt(files.size()));

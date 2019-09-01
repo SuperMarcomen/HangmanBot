@@ -63,7 +63,7 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult guessResult = hangman.guessLetter(letter);
 
         /* Preparing the messages */
-        String string = localization.getString("generalMatchMessage", locale);
+        String string = localization.getString("general_match_message", locale);
         string = localization.handlePlaceholder(string, hangman);
         StringBuilder message = new StringBuilder(string);
 
@@ -90,6 +90,7 @@ public class LetterClick implements CallbackDataHandler {
                     .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)));
             answerCallbackQuery
                     .text(getResponseMessage(guessResult, locale));
+            message.append(localization.getString("lag_alert", locale));
         }
 
         editMessageText.text(Text.parseHtml(message.toString()));

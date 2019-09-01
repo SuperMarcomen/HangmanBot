@@ -17,7 +17,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -43,9 +42,9 @@ public class InlineResults implements InlineQueryHandler {
     }
 
     @Override
-    public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException, SQLException {
+    public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
-        if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop") || chosenInlineResult.getQuery().equalsIgnoreCase("reload")))
+        if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop")))
             return;
 
         Locale locale = chosenInlineResult.getSender().getLocale();

@@ -41,9 +41,10 @@ public class Hangman {
         final int length = word.length();
         for (int offset = 0; offset < length; ) {
             final int codepoint = word.codePointAt(offset);
+            offset += Character.charCount(codepoint);
+
             if (Character.toChars(codepoint)[0] == ' ') continue;
             wordArray.add(codepoint);
-            offset += Character.charCount(codepoint);
         }
     }
 

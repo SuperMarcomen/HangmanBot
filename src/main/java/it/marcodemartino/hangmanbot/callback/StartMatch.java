@@ -58,7 +58,7 @@ public class StartMatch implements CallbackDataHandler {
         if (callbackQuery.getData().get().contains("2"))
             hangman.setMultiplayer(true);
 
-        String message = localization.getString("generalMatchMessage", locale);
+        String message = localization.getString("general_match_message", locale);
         message = localization.handlePlaceholder(message, hangman);
 
         EditMessageText editMessageText = new EditMessageText()
