@@ -6,6 +6,7 @@ import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,12 +53,16 @@ public class Hangman {
         if (guessResult != null && guessResult.equals(GuessResult.MATCH_WIN)) return word;
 
         for (int codepoint : wordArray) {
-            if (guessedLetters.contains(Character.toLowerCase(codepoint)))
+            if (guessedLetters.contains(getCodepointWithoutAccent(Character.toLowerCase(codepoint))))
                 currentWord.append(Character.toChars(codepoint)).append(" ");
             else if (Character.toChars(codepoint)[0] == ' ')
                 currentWord.append("  ");
-            else
+            else if (Character.toChars(codepoint)[0] == '\'')
+                currentWord.append("' ");
+            else if (Character.toChars(codepoint)[0] == '-')
                 currentWord.append("- ");
+            else
+                currentWord.append("_ ");
         }
 
         return currentWord.toString();
@@ -72,7 +77,7 @@ public class Hangman {
         for (int offset = 0; offset < length; ) {
             final int codepoint = letter.toLowerCase().codePointAt(offset);
 
-            if (wordArray.stream().anyMatch(c -> Character.toLowerCase(c) == codepoint)) {
+            if (wordArray.stream().anyMatch(c -> getCodepointWithoutAccent(Character.toLowerCase(c)) == codepoint)) {
                 codepoints.add(codepoint);
             } else {
                 wrongLetters.add(codepoint);
@@ -93,9 +98,18 @@ public class Hangman {
         return null;
     }
 
+    private int getCodepointWithoutAccent(int codepoint) {
+        String letter = String.valueOf(Character.toChars(codepoint));
+
+        return Normalizer.normalize(letter, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "").codePointAt(0);
+    }
+
     private boolean areLetterRight() {
         for (Integer codepoint : wordArray) {
-            if (!guessedLetters.contains(Character.toLowerCase(codepoint))) return false;
+            if (Character.toChars(codepoint)[0] == '\'' || Character.toChars(codepoint)[0] == '-') continue;
+
+            if (!guessedLetters.contains(getCodepointWithoutAccent(Character.toLowerCase(codepoint)))) return false;
         }
         return true;
     }
