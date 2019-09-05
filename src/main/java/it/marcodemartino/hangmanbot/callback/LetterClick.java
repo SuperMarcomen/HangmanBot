@@ -38,13 +38,14 @@ public class LetterClick implements CallbackDataHandler {
         if(!callbackQuery.getInlineMessageId().isPresent()) return;
 
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
-        Locale locale = callbackQuery.getSender().getLocale();
+        Locale userLocale = localization.getUserLocale(callbackQuery.getSender());
+        Locale matchLocale = hangman.getLocale();
 
         /* Match already ended or not found*/
         if(hangman == null) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text(localization.getString("match_not_found", locale))
+                    .text(localization.getString("match_not_found", userLocale))
                     .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
@@ -53,7 +54,16 @@ public class LetterClick implements CallbackDataHandler {
         if (!hangman.isMultiplayer() && hangman.getSenderId() != callbackQuery.getSender().getId()) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
                     .callbackQuery(callbackQuery)
-                    .text(localization.getString("match_not_multiplayer", locale))
+                    .text(localization.getString("match_not_multiplayer", userLocale))
+                    .showAlert(true);
+            bot.execute(answerCallbackQuery);
+            return;
+        }
+
+        if (hangman.isCustomMatch() && hangman.getSenderId() == callbackQuery.getSender().getId()) {
+            AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
+                    .callbackQuery(callbackQuery)
+                    .text(localization.getString("cant_play_your_custom_match", userLocale))
                     .showAlert(true);
             bot.execute(answerCallbackQuery);
             return;
@@ -63,7 +73,7 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult guessResult = hangman.guessLetter(letter);
 
         /* Preparing the messages */
-        String string = localization.getString("general_match_message", locale);
+        String string = localization.getString("general_match_message", matchLocale);
         string = localization.handlePlaceholder(string, hangman);
         StringBuilder message = new StringBuilder(string);
 
@@ -79,18 +89,18 @@ public class LetterClick implements CallbackDataHandler {
         GuessResult status = hangman.getStatus();
         /* Match is ended: updating the messages */
         if (status != null) {
-            answerCallbackQuery.text(getResponseMessage(status, locale));
+            answerCallbackQuery.text(getResponseMessage(status, userLocale));
             if (status.equals(GuessResult.MATCH_WIN))
-                message.append(localization.getString("win_edit_message", locale));
+                message.append(localization.getString("win_edit_message", matchLocale));
             else
-                message.append(localization.handlePlaceholder(localization.getString("lose_edit_message", locale), hangman));
+                message.append(localization.handlePlaceholder(localization.getString("lose_edit_message", matchLocale), hangman));
             matches.remove(callbackQuery.getInlineMessageId().get());
         } else {
             editMessageText
-                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)));
+                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(matchLocale)));
             answerCallbackQuery
-                    .text(getResponseMessage(guessResult, locale));
-            message.append(localization.getString("lag_alert", locale));
+                    .text(getResponseMessage(guessResult, userLocale));
+            message.append(localization.getString("lag_alert", matchLocale));
         }
 
         editMessageText.text(Text.parseHtml(message.toString()));

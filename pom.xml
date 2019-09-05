@@ -6,7 +6,7 @@
 
     <groupId>it.marcodemartino</groupId>
     <artifactId>HangmanBot</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -107,7 +107,7 @@
         <dependency>
             <groupId>com.github.AgeOfWar</groupId>
             <artifactId>Telejam</artifactId>
-            <version>v7.9</version>
+            <version>v7.11</version>
         </dependency>
 
         <dependency>

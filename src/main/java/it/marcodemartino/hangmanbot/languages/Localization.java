@@ -1,20 +1,37 @@
 package it.marcodemartino.hangmanbot.languages;
 
+import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.HangmanBot;
 import it.marcodemartino.hangmanbot.logic.Hangman;
+import it.marcodemartino.hangmanbot.stats.DatabaseManager;
 import it.marcodemartino.hangmanbot.stats.UserStats;
+import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+@AllArgsConstructor
 public class Localization {
 
-    public String getString(String key, Locale locale) throws IOException {
-        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
+    private DatabaseManager database;
 
+    public String getString(String key, User user) throws IOException {
+        Locale locale = getUserLocale(user);
+
+        return getString(key, locale);
+    }
+
+    public String getString(String key, Locale locale) throws IOException {
         ResourceBundle resourceBundle = new UTF8ResourceBundle().newBundle("languages/lang", locale, getClass().getClassLoader(), false);
         return resourceBundle.getString(key);
+    }
+
+    public Locale getUserLocale(User user) {
+        Locale locale = database.getUserLanguage(user);
+        if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
+
+        return locale;
     }
 
     public String handlePlaceholder(String string, Hangman hangman) {

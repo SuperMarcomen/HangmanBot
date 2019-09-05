@@ -7,12 +7,12 @@ import io.github.ageofwar.telejam.methods.EditMessageText;
 import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
 import io.github.ageofwar.telejam.text.Text;
+import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.languages.Localization;
 import it.marcodemartino.hangmanbot.languages.LocalizedWord;
 import it.marcodemartino.hangmanbot.logic.GuessResult;
 import it.marcodemartino.hangmanbot.logic.Hangman;
 import it.marcodemartino.hangmanbot.stats.StatsManager;
-import it.marcodemartino.hangmanbot.stats.UserStats;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -38,25 +38,64 @@ public class InlineResults implements InlineQueryHandler {
         this.bot = bot;
         this.statsManager = statsManager;
         this.matches = matches;
-        cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("Annulla", "cancel_message"));
+        cancelButton = new InlineKeyboardMarkup(new CallbackDataInlineKeyboardButton("❌", "cancel_message"));
     }
 
     @Override
     public void onChosenInlineResult(ChosenInlineResult chosenInlineResult) throws IOException {
         if(!chosenInlineResult.getInlineMessageId().isPresent()) return;
-        if (chosenInlineResult.getSender().getId() == 229856560L && (chosenInlineResult.getQuery().equalsIgnoreCase("stop")))
-            return;
 
-        Locale locale = chosenInlineResult.getSender().getLocale();
+        User user = chosenInlineResult.getSender();
+        Locale locale = localization.getUserLocale(user);
 
         if (!InlineResults.startMatch) {
             EditMessageText editMessageText = new EditMessageText()
                     .inlineMessage(chosenInlineResult.getInlineMessageId().get())
-                    .text(Text.parseHtml(localization.getString("waiting_for_stop", locale)));
+                    .text(Text.parseHtml(localization.getString("waiting_for_stop", user)));
 
             bot.execute(editMessageText);
             return;
         }
+
+        if (chosenInlineResult.getResultId().equals("menu")) {
+            InlineKeyboardButton[] buttons = {
+                    new CallbackDataInlineKeyboardButton(localization.getString("change_language_button", user), "choose_language"),
+                    new CallbackDataInlineKeyboardButton(localization.getString("show_statistics", user), "stats"),
+            };
+
+            EditMessageText editMessageText = new EditMessageText()
+                    .inlineMessage(chosenInlineResult.getInlineMessageId().get())
+                    .replyMarkup(new InlineKeyboardMarkup(buttons))
+                    .text(localization.getString("menu_message", user));
+
+            bot.execute(editMessageText);
+            return;
+        }
+
+        String[] queryArguments = chosenInlineResult.getResultId().split("_");
+
+        statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
+
+        if (queryArguments[0].equals("custom")) {
+            Hangman hangman = new Hangman(queryArguments[1], locale, chosenInlineResult.getSender().getId(), "custom", 5);
+            hangman.setCustomMatch(true);
+            hangman.setMultiplayer(true);
+            matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
+
+            EditMessageText editMessageText = new EditMessageText()
+                    .inlineMessage(chosenInlineResult.getInlineMessageId().get())
+                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)))
+                    .text(Text.parseHtml(localization.handlePlaceholder(localization.getString("general_match_message", user), hangman)));
+
+            bot.execute(editMessageText);
+
+            logMatch(hangman, queryArguments[1], chosenInlineResult);
+
+            return;
+        }
+
+        Hangman hangman = new Hangman(localizedWord.getRandomWordFromCategory(queryArguments[1], locale), locale, chosenInlineResult.getSender().getId(), queryArguments[1], 5);
+        matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
 
         InlineKeyboardButton[] buttons = {
                 new CallbackDataInlineKeyboardButton("Singleplayer", "player_1"),
@@ -66,16 +105,69 @@ public class InlineResults implements InlineQueryHandler {
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(chosenInlineResult.getInlineMessageId().get())
                 .replyMarkup(new InlineKeyboardMarkup(buttons))
-                .text(localization.getString("choose_play_mode", locale));
+                .text(localization.getString("choose_play_mode", user));
 
         bot.execute(editMessageText);
 
-        String category = chosenInlineResult.getResultId().split("_")[1];
+        logMatch(hangman, queryArguments[1], chosenInlineResult);
 
-        Hangman hangman = new Hangman(localizedWord.getRandomWordFromCategory(category, locale), chosenInlineResult.getSender().getId(), category, 5);
-        matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
-        statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
+    }
 
+    @Override
+    public void onInlineQuery(InlineQuery inlineQuery) throws Exception {
+        AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
+                .inlineQuery(inlineQuery)
+                .cacheTime(0)
+                .results(
+                        getInlineQueryResults(inlineQuery.getSender(), inlineQuery.getQuery()).toArray(new InlineQueryResult[0])
+                );
+        bot.execute(answerInlineQuery);
+    }
+
+    private List<InlineQueryResult> getInlineQueryResults(User user, String query) throws IOException {
+        List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
+
+        if (!query.isEmpty()) {
+            inlineQueryResults.add(new InlineQueryResultArticle(
+                    "custom_" + query,
+                    localization.getString("custom_match", user).replace("%word", query),
+                    new InputTextMessageContent(Text.parseHtml(localization.getString("loading", user)), null),
+                    cancelButton,
+                    localization.getString("custom_match_description", user)
+            ));
+            return inlineQueryResults;
+        }
+
+        inlineQueryResults.add(new InlineQueryResultArticle(
+                "menu",
+                localization.getString("menu_button", user),
+                new InputTextMessageContent(Text.parseHtml(localization.getString("loading", user)), null),
+                cancelButton,
+                ""
+        ));
+
+        inlineQueryResults.add(new InlineQueryResultArticle(
+                "match_random",
+                localization.getString("random_category", user),
+                new InputTextMessageContent(Text.parseHtml(localization.getString("loading", user)), null),
+                cancelButton,
+                localization.getString("category_result_description", user)
+        ));
+
+        for (String category : localizedWord.getCategoriesFromLocale(localization.getUserLocale(user))) {
+            inlineQueryResults.add(new InlineQueryResultArticle(
+                    "match_" + category,
+                    localization.getString("category", user).replace("%category", category),
+                    new InputTextMessageContent(Text.parseHtml(localization.getString("loading", user)), null),
+                    cancelButton,
+                    localization.getString("category_result_description", user)
+            ));
+        }
+
+        return inlineQueryResults;
+    }
+
+    private void logMatch(Hangman hangman, String category, ChosenInlineResult result) throws IOException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
         Date date = new Date();
 
@@ -83,78 +175,15 @@ public class InlineResults implements InlineQueryHandler {
                 formatter.format(date),
                 category,
                 hangman.getWord(),
-                chosenInlineResult.getSender().getId(),
-                chosenInlineResult.getSender().getUsername().orElse("none"),
-                chosenInlineResult.getSender().getName()
+                result.getSender().getId(),
+                result.getSender().getUsername().orElse("none"),
+                result.getSender().getName()
         );
 
         SendMessage sendMessage = new SendMessage()
                 .text(message)
                 .chat(-1001296534897L);
         bot.execute(sendMessage);
-    }
-
-    @Override
-    public void onInlineQuery(InlineQuery inlineQuery) throws Exception {
-        if (inlineQuery.getQuery().equalsIgnoreCase("stats")) {
-            Locale locale = inlineQuery.getSender().getLocale();
-            StringBuilder message = new StringBuilder(localization.getString("stats_message_title", locale));
-
-            for (UserStats user : statsManager.getBestUsers()) {
-                message.append(localization.handlePlaceholder(localization.getString("stats_message_body", locale), user));
-            }
-
-            UserStats userStats = statsManager.getUserStats(inlineQuery.getSender().getId());
-            message.append(localization.handlePlaceholder(localization.getString("stats_message_sender", locale), userStats));
-
-            AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
-                    .inlineQuery(inlineQuery)
-                    .cacheTime(0)
-                    .results(
-                            new InlineQueryResultArticle(
-                                    "stats",
-                                    localization.getString("stats_title_result", locale),
-                                    new InputTextMessageContent(Text.parseHtml(message.toString()), null),
-                                    null,
-                                    localization.getString("stats_description_result", locale)
-                            ));
-            bot.execute(answerInlineQuery);
-
-        } else {
-            Locale locale = inlineQuery.getSender().getLocale();
-
-            AnswerInlineQuery answerInlineQuery = new AnswerInlineQuery()
-                    .inlineQuery(inlineQuery)
-                    .cacheTime(0)
-                    .results(
-                            getInlineQueryResults(locale).toArray(new InlineQueryResult[0])
-                    );
-            bot.execute(answerInlineQuery);
-        }
-
-    }
-
-    private List<InlineQueryResult> getInlineQueryResults(Locale locale) throws IOException {
-        List<InlineQueryResult> inlineQueryResults = new ArrayList<>();
-        inlineQueryResults.add(new InlineQueryResultArticle(
-                "match_random",
-                localization.getString("random_category", locale),
-                new InputTextMessageContent(Text.parseHtml(localization.getString("loading", locale)), null),
-                cancelButton,
-                localization.getString("category_result_description", locale)
-        ));
-
-        for (String category : localizedWord.getCategoriesFromLocale(locale)) {
-            inlineQueryResults.add(new InlineQueryResultArticle(
-                    "match_" + category,
-                    localization.getString("category", locale).replace("%category", category),
-                    new InputTextMessageContent(Text.parseHtml(localization.getString("loading", locale)), null),
-                    cancelButton,
-                    localization.getString("category_result_description", locale)
-            ));
-        }
-
-        return inlineQueryResults;
     }
 
 }

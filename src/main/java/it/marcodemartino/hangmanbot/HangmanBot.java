@@ -3,6 +3,7 @@ package it.marcodemartino.hangmanbot;
 import io.github.ageofwar.telejam.Bot;
 import io.github.ageofwar.telejam.LongPollingBot;
 import it.marcodemartino.hangmanbot.callback.LetterClick;
+import it.marcodemartino.hangmanbot.callback.Menu;
 import it.marcodemartino.hangmanbot.callback.StartMatch;
 import it.marcodemartino.hangmanbot.commands.Start;
 import it.marcodemartino.hangmanbot.inline.AdminUtilities;
@@ -22,21 +23,22 @@ public class HangmanBot extends LongPollingBot {
 
     public static final List<Locale> SUPPORTED_LANGUAGES = new ArrayList<>();
 
-    public HangmanBot(Localization localization, LocalizedWord localizedWord, Bot bot, Map<String, Hangman> matches) {
+    public HangmanBot(LocalizedWord localizedWord, Bot bot, Map<String, Hangman> matches) {
         super(bot);
         SUPPORTED_LANGUAGES.add(Locale.ENGLISH);
         SUPPORTED_LANGUAGES.add(Locale.ITALIAN);
         SUPPORTED_LANGUAGES.add(new Locale("fa"));
 
-        events.registerCommand(
-                new Start(localization, bot), "start"
-        );
-
         DatabaseManager databaseManager = new DatabaseManager();
         StatsManager statsManager = new StatsManager(databaseManager);
+        Localization localization = new Localization(databaseManager);
 
         events.registerUpdateHandler(
                 new LetterClick(localization, localizedWord, bot, statsManager, matches)
+        );
+
+        events.registerUpdateHandler(
+                new Menu(bot, localization, statsManager, databaseManager)
         );
 
         events.registerUpdateHandler(
@@ -49,6 +51,10 @@ public class HangmanBot extends LongPollingBot {
 
         events.registerUpdateHandler(
                 new StartMatch(localization, localizedWord, bot, matches)
+        );
+
+        events.registerCommand(
+                new Start(localization, bot), "start"
         );
 
     }
@@ -65,7 +71,7 @@ public class HangmanBot extends LongPollingBot {
 
         Map<String, Hangman> matches = new HashMap<>();
 
-        new HangmanBot(new Localization(), new LocalizedWord(), bot, matches).run();
+        new HangmanBot(new LocalizedWord(), bot, matches).run();
 
     }
 

@@ -8,6 +8,8 @@ import io.github.ageofwar.telejam.inline.InlineKeyboardButton;
 import io.github.ageofwar.telejam.messages.TextMessage;
 import io.github.ageofwar.telejam.methods.SendMessage;
 import io.github.ageofwar.telejam.replymarkups.InlineKeyboardMarkup;
+import io.github.ageofwar.telejam.text.Text;
+import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.languages.Localization;
 
 import java.io.IOException;
@@ -23,12 +25,19 @@ public class Start implements CommandHandler {
     }
 
     public void onCommand(Command command, TextMessage textMessage) throws IOException {
-        InlineKeyboardButton[] keyboardButtons = {new CallbackDataInlineKeyboardButton(localization.getString("supported_languages_button", textMessage.getSender().getLocale()), "supported_languages")};
+        User user = textMessage.getSender();
+        InlineKeyboardButton[] buttons = {
+                new CallbackDataInlineKeyboardButton(localization.getString("change_language_button", user), "choose_language"),
+                new CallbackDataInlineKeyboardButton(localization.getString("show_statistics", user), "stats"),
+        };
+
         SendMessage sendMessage = new SendMessage()
-                .text(localization.getString("start_message", textMessage.getSender().getLocale()))
-                .replyMarkup(new InlineKeyboardMarkup(keyboardButtons))
-                .chat(textMessage.getChat());
+                .chat(textMessage.getChat())
+                .replyMarkup(new InlineKeyboardMarkup(buttons))
+                .text(Text.parseHtml(localization.getString("menu_message", user)));
+
         bot.execute(sendMessage);
+
     }
 
 }
