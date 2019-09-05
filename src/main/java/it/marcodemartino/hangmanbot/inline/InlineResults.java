@@ -143,7 +143,7 @@ public class InlineResults implements InlineQueryHandler {
                 localization.getString("menu_button", user),
                 new InputTextMessageContent(Text.parseHtml(localization.getString("loading", user)), null),
                 cancelButton,
-                ""
+                localization.getString("menu_button_description", user)
         ));
 
         inlineQueryResults.add(new InlineQueryResultArticle(
