@@ -63,7 +63,7 @@ public class StartMatch implements CallbackDataHandler {
 
         EditMessageText editMessageText = new EditMessageText()
                 .inlineMessage(callbackQuery.getInlineMessageId().get())
-                .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)))
+                .replyMarkup(hangman.generateKeyboard())
                 .text(Text.parseHtml(message));
 
         bot.execute(editMessageText);

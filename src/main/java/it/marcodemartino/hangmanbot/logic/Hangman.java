@@ -17,6 +17,7 @@ public class Hangman {
 
     private String word;
     private Locale locale;
+    private List<String> alphabet;
     private List<Integer> wordArray;
     private long senderId;
     private boolean customMatch;
@@ -27,9 +28,10 @@ public class Hangman {
     private int errors;
     private int maxErrors;
 
-    public Hangman(String word, Locale locale, long senderId, String category, int maxErrors) {
+    public Hangman(String word, Locale locale, List<String> alphabet, long senderId, String category, int maxErrors) {
         this.word = word;
         this.locale = locale;
+        this.alphabet = alphabet;
         this.senderId = senderId;
         this.category = category;
         this.maxErrors = maxErrors;
@@ -55,10 +57,8 @@ public class Hangman {
                 currentWord.append(Character.toChars(codepoint));
             else if (Character.toChars(codepoint)[0] == ' ')
                 currentWord.append("   ");
-            else if (Character.toChars(codepoint)[0] == '\'')
-                currentWord.append("' ");
-            else if (Character.toChars(codepoint)[0] == '-')
-                currentWord.append("- ");
+            else if (!alphabet.contains(String.valueOf(Character.toChars(getCodepointWithoutAccent(codepoint))).toUpperCase()))
+                currentWord.append(Character.toChars(codepoint));
             else
                 currentWord.append("_ ");
         }
@@ -105,7 +105,7 @@ public class Hangman {
 
     private boolean areLetterRight() {
         for (Integer codepoint : wordArray) {
-            if (Character.toChars(codepoint)[0] == ' ' || Character.toChars(codepoint)[0] == '\'' || Character.toChars(codepoint)[0] == '-')
+            if (!alphabet.contains(String.valueOf(Character.toChars(getCodepointWithoutAccent(codepoint))).toUpperCase()))
                 continue;
 
             if (!guessedLetters.contains(getCodepointWithoutAccent(Character.toLowerCase(codepoint)))) return false;
@@ -113,7 +113,7 @@ public class Hangman {
         return true;
     }
 
-    public InlineKeyboardMarkup generateKeyboard(List<String> alphabet) {
+    public InlineKeyboardMarkup generateKeyboard() {
         List<InlineKeyboardButton> buttons = new ArrayList<>();
         for (String letter : alphabet) {
 

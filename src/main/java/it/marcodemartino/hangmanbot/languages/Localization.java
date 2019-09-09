@@ -1,5 +1,6 @@
 package it.marcodemartino.hangmanbot.languages;
 
+import io.github.ageofwar.telejam.text.Text;
 import io.github.ageofwar.telejam.users.User;
 import it.marcodemartino.hangmanbot.HangmanBot;
 import it.marcodemartino.hangmanbot.logic.Hangman;
@@ -35,8 +36,8 @@ public class Localization {
     }
 
     public String handlePlaceholder(String string, Hangman hangman) {
-        string = string.replace("%word_state", hangman.getCurrentState());
-        string = string.replace("%word", hangman.getWord());
+        string = string.replace("%word_state", new Text(hangman.getCurrentState()).toHtmlString());
+        string = string.replace("%word", new Text(hangman.getWord()).toHtmlString());
         string = string.replace("%current_errors", String.valueOf(hangman.getErrors()));
         string = string.replace("%max_errors", String.valueOf(hangman.getMaxErrors()));
         string = string.replace("%category", hangman.getCategory());

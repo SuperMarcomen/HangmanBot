@@ -39,7 +39,6 @@ public class LetterClick implements CallbackDataHandler {
 
         Hangman hangman = matches.get(callbackQuery.getInlineMessageId().get());
         Locale userLocale = localization.getUserLocale(callbackQuery.getSender());
-        Locale matchLocale = hangman.getLocale();
 
         /* Match already ended or not found*/
         if(hangman == null) {
@@ -50,6 +49,8 @@ public class LetterClick implements CallbackDataHandler {
             bot.execute(answerCallbackQuery);
             return;
         }
+
+        Locale matchLocale = hangman.getLocale();
 
         if (!hangman.isMultiplayer() && hangman.getSenderId() != callbackQuery.getSender().getId()) {
             AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery()
@@ -97,7 +98,7 @@ public class LetterClick implements CallbackDataHandler {
             matches.remove(callbackQuery.getInlineMessageId().get());
         } else {
             editMessageText
-                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(matchLocale)));
+                    .replyMarkup(hangman.generateKeyboard());
             answerCallbackQuery
                     .text(getResponseMessage(guessResult, userLocale));
             message.append(localization.getString("lag_alert", matchLocale));

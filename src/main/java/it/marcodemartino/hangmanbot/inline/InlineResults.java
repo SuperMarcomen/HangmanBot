@@ -72,19 +72,26 @@ public class InlineResults implements InlineQueryHandler {
             return;
         }
 
-        String[] queryArguments = chosenInlineResult.getResultId().split("_");
+        String[] queryArguments = chosenInlineResult.getResultId().split("_", 2);
 
         statsManager.increaseStats(chosenInlineResult.getSender(), GuessResult.MATCH_STARTED);
 
         if (queryArguments[0].equals("custom")) {
-            Hangman hangman = new Hangman(queryArguments[1], locale, chosenInlineResult.getSender().getId(), "custom", 5);
+            Hangman hangman = new Hangman(
+                    queryArguments[1],
+                    locale,
+                    localizedWord.getAlphabetFromLocale(locale),
+                    chosenInlineResult.getSender().getId(),
+                    "custom",
+                    5
+            );
             hangman.setCustomMatch(true);
             hangman.setMultiplayer(true);
             matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
 
             EditMessageText editMessageText = new EditMessageText()
                     .inlineMessage(chosenInlineResult.getInlineMessageId().get())
-                    .replyMarkup(hangman.generateKeyboard(localizedWord.getAlphabetFromLocale(locale)))
+                    .replyMarkup(hangman.generateKeyboard())
                     .text(Text.parseHtml(localization.handlePlaceholder(localization.getString("general_match_message", user), hangman)));
 
             bot.execute(editMessageText);
@@ -94,7 +101,15 @@ public class InlineResults implements InlineQueryHandler {
             return;
         }
 
-        Hangman hangman = new Hangman(localizedWord.getRandomWordFromCategory(queryArguments[1], locale), locale, chosenInlineResult.getSender().getId(), queryArguments[1], 5);
+        Hangman hangman = new Hangman(
+                localizedWord.getRandomWordFromCategory(queryArguments[1], locale),
+                locale,
+                localizedWord.getAlphabetFromLocale(locale),
+                chosenInlineResult.getSender().getId(),
+                queryArguments[1],
+                5
+        );
+
         matches.put(chosenInlineResult.getInlineMessageId().get(), hangman);
 
         InlineKeyboardButton[] buttons = {
