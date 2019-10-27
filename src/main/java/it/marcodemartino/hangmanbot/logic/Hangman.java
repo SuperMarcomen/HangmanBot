@@ -33,7 +33,7 @@ public class Hangman {
         this.locale = locale;
         this.alphabet = alphabet;
         this.senderId = senderId;
-        this.category = category;
+        this.category = category.replace(".txt", "");
         this.maxErrors = maxErrors;
         wordArray = new ArrayList<>();
         guessedLetters = new ArrayList<>();

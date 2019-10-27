@@ -2,69 +2,65 @@ package it.marcodemartino.hangmanbot.languages;
 
 import it.marcodemartino.hangmanbot.HangmanBot;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.*;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LocalizedWord {
 
-    public List<String> getAlphabetFromLocale(Locale locale) throws FileNotFoundException {
+    private final Random random = new Random();
+    private final List<String> RANDOM_CATEGORIES_BLACKLIST = Arrays.asList("Java.txt", "Hearthstone.txt");
+
+    public List<String> getAlphabetFromLocale(Locale locale) throws IOException {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
-        File file = new File("alphabet/" + locale.getLanguage() + ".txt");
-        Scanner s = new Scanner(file, "UTF-8");
-        List<String> list = new ArrayList<>();
-
-        while (s.hasNextLine()) {
-            list.add(s.nextLine());
-        }
-        s.close();
-        return list;
+        return Files.readAllLines(
+                Paths.get("alphabet/" + locale.getLanguage() + ".txt"),
+                Charset.defaultCharset()
+        );
     }
 
-    public List<String> getCategoriesFromLocale(Locale locale) {
+    public List<String> getCategoriesFromLocale(Locale locale) throws IOException {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
-        List<String> categories = new ArrayList<>();
+        Stream<Path> walk = Files.walk(Paths.get("words/" + locale.getLanguage() + "/"));
 
-        File folder = new File("words/" + locale.getLanguage() + "/");
-        for (File file : folder.listFiles()) {
-            if (file.isDirectory()) continue;
-            categories.add(file.getName().replace(".txt", ""));
-        }
-
-        return categories;
+        return walk.filter(Files::isRegularFile)
+                .map(x -> x.getFileName().toString().replace(".txt", "")).collect(Collectors.toList());
     }
 
-    public String getRandomWordFromCategory(String category, Locale locale) throws FileNotFoundException {
+    public String getRandomWordFromCategory(String category, Locale locale) throws IOException {
         if (!HangmanBot.SUPPORTED_LANGUAGES.contains(locale)) locale = Locale.ENGLISH;
 
         return getRandomWord(category, locale);
     }
 
-    private String getRandomWord(String category, Locale locale) throws FileNotFoundException {
-        File file = getRandomFile(category, locale);
+    private String getRandomWord(String category, Locale locale) throws IOException {
+        Path path = getRandomFile(category, locale);
 
-        Scanner s = new Scanner(file, "UTF-8");
-        List<String> list = new ArrayList<>();
-        while (s.hasNextLine()) {
-            list.add(s.nextLine());
-        }
-        s.close();
+        List<String> list = Files.readAllLines(path, Charset.defaultCharset());
 
-        Random random = new Random();
         return list.get(random.nextInt(list.size()));
     }
 
-    private File getRandomFile(String category, Locale locale) {
-        if (!category.equals("random")) return new File("words/" + locale.getLanguage() + "/" + category + ".txt");
+    private Path getRandomFile(String category, Locale locale) throws IOException {
+        if (!category.equals("random")) return Paths.get("words/" + locale.getLanguage() + "/" + category + ".txt");
 
-        File directory = new File("words/" + locale.getLanguage() + "/");
-        List<File> files = Arrays.asList(directory.listFiles());
-        files.remove("Java.txt");
-        files.remove("Hearthstone.txt");
+        Stream<Path> walk = Files.walk(Paths.get("words/" + locale.getLanguage() + "/"));
 
-        Random rand = new Random();
-        return files.get(rand.nextInt(files.size()));
+        List<Path> result = walk.filter(Files::isRegularFile)
+                .filter(path -> !RANDOM_CATEGORIES_BLACKLIST.contains(path.getFileName().toString()))
+                .collect(Collectors.toList());
+
+        return result.get(random.nextInt(result.size()));
+
     }
 }
